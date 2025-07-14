@@ -86,9 +86,9 @@ Set the default models used by GenAI:
 ## Run GenAI Service Containers
 
 1. Download and unpack the archive with the setup files from the repository:  
-   [GenAI Docker-Compose Setup](https://github.com/Advance-Technologies-Foundation/genai-deployment/docker-compose.zip)
+   [GenAI Docker-Compose Setup](https://github.com/Advance-Technologies-Foundation/genai-deployment/archive/refs/heads/main.zip)
 
-2. Open a terminal and navigate to the folder where you unpacked the files.
+2. Open a terminal and navigate to the docker-compose folder.
 
 3. Run the following command to start the GenAI service containers in detached mode:
 
