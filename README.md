@@ -9,10 +9,11 @@ This document provides a step-by-step procedure to deploy and configure the GenA
 
 1. [Install Docker](#install-docker)  
 2. [Install Docker-Compose](#install-docker-compose)  
-3. [Set Up Container Variables](#set-up-container-variables)  
-4. [Run GenAI Service Containers](#run-genai-service-containers)  
-5. [Configure GenAI Functionality in Creatio](#configure-genai-functionality-in-creatio)  
-6. [Notes](#notes)
+3. [Download docker compose files](#download-docker-compose-files)  
+4. [Set Up Container Variables](#set-up-container-variables)  
+5. [Run GenAI Service Containers](#run-genai-service-containers)  
+6. [Configure GenAI Functionality in Creatio](#configure-genai-functionality-in-creatio)  
+7. [Notes](#notes)
 
 ---
 
