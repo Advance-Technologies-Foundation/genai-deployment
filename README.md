@@ -94,6 +94,8 @@ Provide parameters depending on the Large Language Model (LLM) service you are u
 
 | Variable                     | Description                                               |
 |------------------------------|-----------------------------------------------------------|
+| `OPENAI_MODEL`              | OpenAI provider and model ID (e.g. openai/gpt-4o)         |
+| `OPENAI_EMBEDDING_MODEL`    | OpenAI provider and embedding model ID (e.g. openai/gpt-4o)         |
 | `OPENAI_API_KEY`              | Your OpenAI API key to authenticate API requests.         |
 | `OPENAI_API_KEY_TEXT_EMBEDDING` | *(Optional)* Separate key for OpenAI text embedding service if different from main key. |
 
@@ -101,6 +103,8 @@ Provide parameters depending on the Large Language Model (LLM) service you are u
 
 | Variable                     | Description                                               |
 |------------------------------|-----------------------------------------------------------|
+| `AZURE_MODEL`               | Azure provider and model ID (e.g. azure/gpt-4o-2024-11-20)     |
+| `AZURE_EMBEDDING_MODEL`     | Azure provider and embedding model ID (e.g. azure/gpt-4o-2024-11-20)      |
 | `AZURE_API_KEY`               | Azure API key (subscription key) for authentication.      |
 | `AZURE_API_TEXT_EMBEDDING`   | *(Optional)* Separate API key or token for Azure text embedding service. |
 | `AZURE_DEPLOYMENTID`          | Deployment ID or name of the Azure OpenAI model to use.   |
