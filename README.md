@@ -114,39 +114,6 @@ http://[your_server_ip_address]:5006
 
 Replace `[your_server_ip_address]` with the actual IP address or hostname of the server where the GenAI Docker containers are running.
 
----
-
-## Sample .env File
-
-Below is an example `.env` file template. Update the values to fit your environment and API keys.
-
-```env
-# OpenAI settings (use either OpenAI or Azure OpenAI depending on your setup)
-OPENAI_API_KEY=your_openai_api_key_here
-OPENAI_API_KEY_TEXT_EMBEDDING=your_openai_embedding_key_here
-
-# Azure OpenAI settings (comment out if not used)
-AZURE_API_KEY=your_azure_api_key_here
-AZURE_API_TEXT_EMBEDDING=your_azure_embedding_key_here
-AZURE_DEPLOYMENTID=your_azure_deployment_id_here
-AZURE_RESOURCENAME=your_azure_resource_name_here
-
-# Default models
-GenAI__DefaultModel=text-davinci-003
-GenAI__EmbeddingsModel=text-embedding-ada-002
-```
-
----
-
-## Troubleshooting
-
-- **Docker commands not found:** Ensure Docker and Docker-Compose are installed correctly and your user has permissions to run Docker commands.  
-- **Containers fail to start:** Check `.env` for correct environment variables and validate API keys.  
-- **Service unreachable in Creatio:** Confirm the server IP is correct and port 5006 is open on your firewall.  
-- **Logs:** Check container logs with `docker-compose logs` for errors.
-
----
-
 ## Notes
 
 - This deployment uses **Docker Compose** for orchestration.  
