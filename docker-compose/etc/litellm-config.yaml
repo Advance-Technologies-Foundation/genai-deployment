@@ -16,7 +16,7 @@ model_list:
   - model_name: azure-text-embedding-3-large
     litellm_params:
       model: azure/text-embedding-3-large
-      api_base: os.environ/AZURE_API_BASE
+      api_base: os.environ/AZURE_EMBEDDING_API_BASE
       api_key: os.environ/AZURE_API_TEXT_EMBEDDING
       api_version: "2024-10-21"
 general_settings:

@@ -1,6 +1,8 @@
 
 # GenAI Setup Guide
 
+# Docker compose
+
 This document provides a step-by-step procedure to deploy and configure the GenAI service using Docker Compose on a Linux machine, and integrate it with Creatio.
 
 ---
@@ -80,6 +82,7 @@ Provide parameters depending on the Large Language Model (LLM) service you are u
 | `AZURE_DEPLOYMENTID`          | Deployment ID or name of the Azure OpenAI model to use.   |
 | `AZURE_RESOURCENAME`          | Name of your Azure OpenAI resource instance for endpoint construction. |
 | `AZURE_API_BASE`          | The base URL of your Azure OpenAI endpoint. This is typically in the format https://<your-resource-name>.openai.azure.com. It's used to construct full API request URLs. |
+| `AZURE_EMBEDDING_API_BASE`          | The base URL of your Azure OpenAI endpoint (embedding model). This is typically in the format https://<your-resource-name>.openai.azure.com. It's used to construct full API request URLs. |
 | `AZURE_API_VERSION`          | The version of the Azure OpenAI API to use. For example: 2023-07-01-preview. This must match a supported version by Azure and may change over time as the API evolves. |
 
 ### Default Models
