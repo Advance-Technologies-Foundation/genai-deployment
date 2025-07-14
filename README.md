@@ -44,12 +44,16 @@ Verify Docker-Compose installation by running:
 docker-compose --version
 ```
 
-2. Download and unpack the archive with the setup files from the repository:  
-   [GenAI Docker-Compose Setup](https://github.com/Advance-Technologies-Foundation/genai-deployment/archive/refs/heads/main.zip)
-
 ---
 
+## Download docker compose files
 
+1. Download and unpack the archive with the setup files from the repository:  
+   [GenAI Docker-Compose Setup](https://github.com/Advance-Technologies-Foundation/genai-deployment/archive/refs/heads/main.zip)
+
+2. Go to the docker-compose folder
+
+---
 
 ## Set Up Container Variables
 
