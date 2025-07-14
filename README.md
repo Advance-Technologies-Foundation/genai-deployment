@@ -119,8 +119,8 @@ Set the default models used by GenAI:
 
 | Variable                     | Description                                               |
 |------------------------------|-----------------------------------------------------------|
-| `GenAI__DefaultModel`         | Identifier or name of the default language generation model (for text completion or chat). |
-| `GenAI__EmbeddingsModel`      | Identifier or name of the default text embeddings model.  |
+| `GenAI__DefaultModel`         | Identifier or name of the default language generation model (for text completion or chat). Take it from \etc\litellm-config.yaml (model_name parameter of the corresponding model) |
+| `GenAI__EmbeddingsModel`      | Identifier or name of the default text embeddings model. Take it from \etc\litellm-config.yaml (model_name parameter of the corresponding model) |
 
 ---
 
