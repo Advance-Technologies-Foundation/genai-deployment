@@ -1,0 +1,119 @@
+networks:
+  enrichment:
+    driver: bridge
+volumes:
+  postgres:
+    driver: local
+
+services:
+  enrichment:
+    image: registry.creatio.com/enrichment-service:${TAG}
+    ports:
+      - 5006:8080
+    dns_search: ${INTERNAL_DOMAIN}
+    deploy:
+      restart_policy:
+        condition: on-failure
+    environment:
+      - "ConnectionStrings__Db=Host=${POSTGRES_HOST:-enrichment-postgres};Port=${POSTGRES_PORT:-5432};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres};Database=${POSTGRES_DB:-postgres};SearchPath=${POSTGRES_SEARCHPATH:-enrichment};"
+      - "GenAI__CustomDomain=http://litellm:4000"
+      - "GenAI__ProviderType=${GenAI__ProviderType}"    
+      - "GenAI__DefaultModel=${GenAI__DefaultModel}"
+      - "GenAI__EmbeddingsModel=${GenAI__EmbeddingsModel}"
+      - "GenAI__AzureResourceName=${AZURE_RESOURCENAME}"
+      - "GenAI__AzureDeploymentId=${AZURE_DEPLOYMENTID}"
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      flyway:
+        condition: service_started
+      litellm:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/Log
+      - ./etc/appsettings.json:/app/appsettings.json
+      - ./etc/log4net.config:/app/log4net.config
+    networks:
+      - enrichment
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "5"
+
+  flyway:
+    image: registry.creatio.com/enrichment-flyway:${TAG}
+    dns_search: ${INTERNAL_DOMAIN}
+    deploy:
+      restart_policy:
+        condition: on-failure
+    command: -url=jdbc:postgresql://${POSTGRES_HOST:-enrichment-postgres}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-postgres} -schemas=${POSTGRES_SEARCHPATH:-enrichment} -user=${POSTGRES_USER:-postgres} -password=${POSTGRES_PASSWORD:-postgres} migrate
+    environment:
+      - FLYWAY_CREATE_SCHEMAS=true
+      - FLYWAY_CONNECT_RETRIES=1
+      - FLYWAY_BASELINE_ON_MIGRATE=true
+      - FLYWAY_VALIDATE_ON_MIGRATE=false
+    networks:
+      - enrichment
+    depends_on:
+      postgres:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "5"
+
+  postgres:
+    container_name: enrichment-postgres
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      PGDATA: /data/postgres
+    restart: unless-stopped
+    volumes:
+      - postgres:/data/postgres
+    networks:
+      - enrichment
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "5"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+
+  litellm:
+    image: ghcr.io/berriai/litellm:${LITELLM_VERSION:-main-v1.72.6-stable}
+    volumes:
+      - ./etc/litellm-config.yaml:/app/config.yaml # Mount the local configuration file
+    environment:
+        DATABASE_URL: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@${POSTGRES_HOST:-enrichment-postgres}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-postgres}"
+        STORE_MODEL_IN_DB: "True" # allows adding models to proxy via UI
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    command: [ "--config", "/app/config.yaml", "--port", "4000", "--num_workers", "8" ]
+    networks:
+      - enrichment
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "5"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4000/health/readiness || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+
+

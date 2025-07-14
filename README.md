@@ -18,7 +18,7 @@ This document provides a step-by-step procedure to deploy and configure the GenA
 
 ## Install Docker
 
-Install Docker on a physical or virtual machine running Linux OS to deploy the global search components.
+Install Docker on a physical or virtual machine running Linux OS to deploy the GenAI components.
 
 Refer to the official Docker installation documentation for Linux (Debian-based distributions):  
 https://docs.docker.com/install/linux/docker-ce/debian/
