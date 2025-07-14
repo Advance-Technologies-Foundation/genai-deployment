@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "enrichment.fullname" . }}
+  labels:
+    app: {{ template "enrichment.name" . }}
+    chart: {{ template "enrichment.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+      nodePort: {{ .Values.service.nodePort }}
+  selector:
+    app: {{ template "enrichment.name" . }}
+    release: {{ .Release.Name }}

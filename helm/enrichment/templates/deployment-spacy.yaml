@@ -1,0 +1,40 @@
+{{- if .Values.spacy.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "enrichment.fullname" . }}-spacy-ner
+  labels:
+    app: {{ template "enrichment.name" . }}-spacy-ner
+    chart: {{ template "enrichment.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: 1
+  strategy:
+    type: {{ .Values.commonImagesConfig.strategy }}
+    rollingUpdate: null
+  selector:
+    matchLabels:
+      app: {{ template "enrichment.name" . }}-spacy-ner
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "enrichment.name" . }}-spacy-ner
+        release: {{ .Release.Name }}
+    spec:
+    {{ if .Values.commonImagesConfig.useImagePullSecret }}
+      imagePullSecrets:
+        {{- toYaml .Values.enrichmentServiceImage.imagePullSecrets | nindent 8 }}
+    {{- end }}
+      containers:
+        - name: {{ template "enrichment.name" . }}-spacy-ner
+          image: "{{ .Values.spacyNerImage.repository }}:{{ .Values.spacyNerImage.tag }}"
+          imagePullPolicy: {{ .Values.commonImagesConfig.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.spacy.service.port }}
+              protocol: TCP
+          resources:
+{{ toYaml .Values.spacy.resources | indent 12 }}
+{{- end }}

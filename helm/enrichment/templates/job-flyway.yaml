@@ -1,0 +1,42 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ template "enrichment.fullname" . }}-flyway
+  labels:
+    app: {{ template "enrichment.name" . }}-flyway
+    chart: {{ template "enrichment.chart" . }}
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "1"
+spec:
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        app: {{ template "enrichment.fullname" . }}-flyway
+        release: "{{ .Release.Name }}"
+    spec:
+      restartPolicy: Never
+{{ if .Values.commonImagesConfig.useImagePullSecret }}
+      imagePullSecrets:
+        {{- toYaml .Values.flywayImage.imagePullSecrets | nindent 8 }}
+{{- end }}
+      containers:
+        - name: {{ template "enrichment.fullname" . }}-flyway
+          image: "{{ .Values.flywayImage.repository }}:{{ .Values.flywayImage.tag }}"
+          imagePullPolicy: {{ .Values.flywayImage.pullPolicy }}
+          resources:
+            {{ toYaml .Values.flyway.resources | nindent 12 }}
+          args:
+            - "-connectRetries=20"
+            - "-connectRetriesInterval=5"
+            - "-baselineOnMigrate=true"
+            - "-url=jdbc:postgresql://{{ .Values.appConfig.db.host }}:{{ .Values.appConfig.db.port }}/{{ .Values.appConfig.db.database }}"
+            - "-schemas={{ .Values.appConfig.db.schema }}"
+            - "-user={{ .Values.appConfig.db.user }}"
+            - "-password={{ .Values.appConfig.db.password }}"
+            - "-createSchemas=true"
+            - "-locations=filesystem:./sql"
+            - "migrate"

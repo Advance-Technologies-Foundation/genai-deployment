@@ -1,0 +1,241 @@
+replicaCount: 5
+
+commonImagesConfig:
+  strategy: RollingUpdate
+  pullPolicy: IfNotPresent
+  useImagePullSecret: false
+
+enrichmentServiceImage:
+  repository: registry.creatio.com/enrichment-service
+  tag: 1.0.649
+  pullPolicy: IfNotPresent
+
+spacyNerImage:
+  repository: registry.creatio.com/spacy-ner
+  tag: 1.0.649
+  pullPolicy: IfNotPresent
+
+flywayImage:
+  repository: registry.creatio.com/enrichment-flyway
+  tag: 1.0.649
+  pullPolicy: IfNotPresent
+
+appConfig:
+  redis:
+    enabled: false
+    host: "<redis-host-address>"
+  db:
+      host: postgres
+      port: 5432
+      user: user
+      password: password
+      database: postgres
+      schema: enrichment
+  accountManagementBaseServiceUrl: "http://185.99.10.125:8080"
+  knitEngine:
+    spacy:
+      timeoutSec: 15
+  genAI:
+    llmProviders:
+      type: custom # custom, default, openai, azure
+      defaultModel: "openai-gpt-4o"
+      embeddingsModel: "openai-text-embedding-3-large"
+      models:
+        openai:
+          - name: openai-gpt-4o
+            model: gpt-4o
+            api_key: <openai_api_key>
+          - name: openai-text-embedding-3-large
+            model: text-embedding-3-large
+            api_key: <openai_api_key>
+        azure: []
+#          - name: azure-gpt-4o
+#            model: <your-model-name>
+#            resource_name: <your-azure-resource-name>
+#            api_key: <your-azure-api-key>
+#          - name: azure-text-embedding-3-large
+#            model: text-embedding-3-large
+#            resource_name: <your-azure-resource-name>
+#            api_key: <your-azure-api-key>
+        bedrock: []
+#          - name: claude-3-5-haiku
+#            model: us.anthropic.claude-3-5-haiku-20241022-v1:0
+#            aws_region_name: <aws_region_name>
+#            aws_secret_access_key: <aws_secret_access_key>
+#            aws_access_key_id: <aws_access_key_id>
+
+    customDomain: ""
+    genEntitiesPrompt: >-
+      You are a bot that responds strictly with JSON data structures. Requests to you will contain description of the application. In your answer you should provide JSON data structure of that application. Your response must contain only JSON and no other text, description or annotation. Your response must strictly follow RFC 8259 standard. The response must be an array of JSON objects. Each object must represent a single table and have next required attributes: 'table_name', 'caption', 'columns', 'isMain' and optional attribute 'details'. Each object contains columns and you should provide as many columns as you can. Columns object must contain nested keys that are field names, when values are nested objects that contain type with key type, caption of column that is meaningful to a human in English. Available data types are: string, date, datetime, time, integer, float or an object that specifies foreign key to another lookup table. That foreign key specification must contain reference table name with key reference_table. If column represents e-mail of telephone number please provide boolean attributes 'isEmail' or 'isPhone' indicating this respectively. Also object can contain array-type property named Details that contains other tables with the same structure. That details represent tables with detail information for the main table. Each object must contain caption of table that is meaningful to a human in English. Please provide as many tables and columns as you can. Attribute isMain indicates the object is the main for the application.  My first question - give me database structure for:
+    genDcmPrompt: >-
+      Specify only those stages where you can display an indicator of the current execution stage of the business process of the tasks associated with the application created by description in json format, example `[\"stage1\", \"stage2\", \"stage3\"]`. Stages must be an array of string values. Each element should represent a short title of the process stage for the given application. Stage names should reflect the state at a particular stage of the business process and contain information about the object for the progress bar in order from the beginning to the last stage. Do this for an application created from the following description:
+    genDataPrompt: >-
+      I want you to act as a demo data generator. To generate demo data, focus on the caption attribute. Demo data values should be realistic for production. I will send you an array of objects. You must generate demo data for my request. Your response must have only two demo rows per object. For example my request `[{\"table_name\":\"contacts\",\"columns\":[{\"name\":\"full_name\",\"caption\":\"Full name\",\"type\":\"string\"},{\"name\":\"phone\",\"caption\":\"Mobile phone\",\"type\":\"phone\"},{\"name\":\"city\",\"caption\":\"City name\",\"type\":\"lookup\", \"reference_table_name\": \"cities\", \"reference_column_name\": \"city_name\"}]}, {\"table_name\":\"cities\",\"columns\":[{\"name\":\"city_name\"}]}]` you return `{\"contacts\":[{\"full_name\":\"Jon Week\",\"phone\":\"+38 097 166-55-22\",\"city\": \"Kyiv\"},{\"full_name\":\"Mike Smith\",\"phone\":\"+38 099 355-55-22\",\"city\": \"Lviv\"}], \"cities\":[{\"city_name\":\"Lviv\"},{\"city_name\":\"Kiev\"}]}`. You are a bot that only responds with JSON data structures. Your response must contain only JSON and no other text, description, or annotations. Your response must strictly conform to RFC 8259. My first question is to generate demo data for application with description:
+    genEntitiesMockRequestQuery: "Mock, please"
+    openAIRetryOnFailureCount: 3
+    openAIRetryIntervalSeconds: 5
+    openAIHttpClientTimeoutSec: 240
+    maxRequestsPerHour: -1
+    maxRequestsPerDay: -1
+    maxRequestsPerMonth: -1
+    maxTokensPerMonth: -1
+    maxTokensPerDay: -1
+    maxTokensPerHour: -1
+    maxTokensPerMinute: -1
+    maxTotalTokens: 1000000
+    totalTokensLimitId: "aae5f33a-c7ab-4099-a9f7-fb03cc89c271"
+    maxQueryText: 8000
+    storeSensitiveFieldsInStats: false
+    defaultSeed: 42
+  traceDebugInfo: false
+  logLevel: "DEBUG"
+  minThreads: 2000
+
+grayLog:
+  enabled: false
+  AMQP:
+    host: <graylog-host>
+    port: <graylog-port>
+    userName: <graylog-username>
+    password: <graylog-password>
+    virtualHost: /
+    exchange: <graylog-exchange>
+    routingKey: <graylog-routing-key>
+
+nameOverride: ""
+fullnameOverride: ""
+
+redis:
+  enabled: false
+
+postgresql:
+  enabled: false
+
+service:
+  type: ClusterIP
+  port: 8080
+
+spacy:
+  enabled: true
+  service:
+    type: ClusterIP
+    port: 5000
+    enableIngressEndpoint: false
+  resources:
+    limits:
+      cpu: 1500m
+      memory: 2000Mi
+    requests:
+      cpu: 800m
+      memory: 1000Mi
+
+mockserver:
+  service:
+    type: ClusterIP
+    port: 1080
+  replicaCount: 1
+  enabled: false
+  image:
+    repository: mockserver/mockserver
+    tag: mockserver-5.15.0
+
+litellm:
+  enabled: false
+  replicaCount: 1
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 500m
+    limits:
+      memory: 8096Mi
+      cpu: 1500m
+  image:
+    repository: ghcr.io/berriai/litellm
+    tag: main-v1.72.6-stable
+  service:
+    type: ClusterIP
+    port: 4000
+  dbSchema: litellm
+  turn_off_message_logging: True
+#  master_key: <sk-maskerkey>
+#  custom_api_key: <sk-customapiKey>
+#  success_callback: ["log_to_console"]
+#  failure_callback: ["log_to_console"]
+#  callbacks: ["log_to_console"]
+#  fallbacks:
+#    - azure-gpt-4o: ["openai-gpt-4o"]
+#    - claude-3-5-haiku: ["openai-gpt-4o"]
+
+usageLimitsRetriever:
+  enabled: true
+  limitsProviderServiceUrl: https://studio.creatio.com
+  clientLimitEndpoint: "0/rest/SubscriptionLimitService/GetEnvironmentLimit"
+  identityServiceTokenUrl: https://studio-is.creatio.com/connect/token
+  clientId: B2419A120DF38086D4D8472CB209F5B9
+  clientSecret: AC53CE4C29EBB0F051ACCE9CA83C4B76C6FDEC9F3A6CF2E7FB6F2F9D2C8C6817
+  cacheLifetimeSec: 3600
+  requestTimeoutSec: 15
+
+ingress:
+  enabled: false
+  annotations:
+    ingress.class: haproxy
+    ingress.kubernetes.io/rewrite-target: "/"
+    ingress.kubernetes.io/ssl-redirect: "false"
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  mockServerPath: /mockserver
+  spacyPath: /spacy
+  path: /
+  hosts:
+    - chart-example.local
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+env:
+  - name: ENRICHMENT_AuthenticationOptions__UseOAuth
+    value: "true"
+  - name: ENRICHMENT_AuthenticationOptions__UseApiKey
+    value: "true"
+  - name: ENRICHMENT_AuthenticationOptions__IdentityProviderUrl
+    value: "https://accounts.creatio.com"
+  - name: ENRICHMENT_AuthenticationOptions__RequiredAudience
+    value: "use_enrichment"
+  - name: ENRICHMENT_AuthenticationOptions__RequiredIssuer
+    value: "creatio.com"
+
+enrichment:
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2000Mi
+    requests:
+      cpu: 200m
+      memory: 1000Mi
+
+flyway:
+  resources:
+    limits:
+      cpu: 100m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+jaeger:
+  enabled: false
+  replicaCount: 1
+  service:
+    type: ClusterIP
+  image:
+    repository: jaegertracing/all-in-one
+    tag: 1.68.0
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi

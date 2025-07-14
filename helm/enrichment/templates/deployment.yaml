@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "enrichment.fullname" . }}
+  labels:
+    app: {{ template "enrichment.name" . }}
+    chart: {{ template "enrichment.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: {{ .Values.commonImagesConfig.strategy }}
+    rollingUpdate: null
+  selector:
+    matchLabels:
+      app: {{ template "enrichment.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "enrichment.name" . }}
+        release: {{ .Release.Name }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: {{ .Values.service.port | quote }}
+    spec:
+{{ if .Values.commonImagesConfig.useImagePullSecret }}
+      imagePullSecrets:
+        {{- toYaml .Values.enrichmentServiceImage.imagePullSecrets | nindent 8 }}
+{{- end }}
+      volumes:
+        - name: application-config
+          configMap:
+            name: {{ template "enrichment.fullname" . }}
+            items:
+              - key: applicationConfig
+                path: appsettings.json
+        - name: log4net-cfg
+          configMap:
+            name: {{ template "enrichment.fullname" . }}
+            items:
+              - key: log4netcfg
+                path: log4net.config
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.enrichmentServiceImage.repository }}:{{ .Values.enrichmentServiceImage.tag }}"
+          imagePullPolicy: {{ .Values.commonImagesConfig.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+{{ toYaml .Values.env | indent 12 }}
+            - name: ConnectionStrings__Db
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secret-enrichment
+                  key: dbConnectionString
+            - name: GenAI__OpenAIApiKey
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secret-enrichment
+                  key: openAIApiKey
+            - name: GenAI__AzureDeploymentId
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secret-enrichment
+                  key: azureDeploymentId
+            - name: GenAI__AzureResourceName
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secret-enrichment
+                  key: azureResourceName
+            {{- if .Values.jaeger.enabled }}
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: {{ include "jaeger.otel.endpoint" . }}
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /liveness
+              port: http
+            initialDelaySeconds: 15
+            timeoutSeconds: 5
+            periodSeconds: 60
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              port: http
+            initialDelaySeconds: 15
+            timeoutSeconds: 30
+            periodSeconds: 60
+          resources:
+{{ toYaml .Values.enrichment.resources | indent 12 }}
+          volumeMounts:
+            - name: application-config
+              mountPath: /app/appsettings.json
+              subPath: appsettings.json
+            - name: log4net-cfg
+              mountPath: /app/log4net.config
+              subPath: log4net.config

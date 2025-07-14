@@ -1,0 +1,153 @@
+replicaCount: 1
+
+commonImagesConfig:
+  strategy: RollingUpdate
+  pullPolicy: IfNotPresent
+  useImagePullSecret: true
+
+enrichmentServiceImage:
+  repository: registry.creatio.com/enrichment-service
+  pullPolicy: IfNotPresent
+  imagePullSecrets:
+    - name: regcred
+
+flywayImage:
+  repository: registry.creatio.com/enrichment-flyway
+  pullPolicy: IfNotPresent
+  imagePullSecrets:
+    - name: regcred
+
+appConfig:
+  redis:
+    enabled: false
+  db:
+    host: postgresql-ai
+    port: 5432
+    user: postgres
+    password: postgres
+    database: enrichment
+    schema: enrichment
+  genAI:
+    llmProviders:
+      type: custom
+      defaultModel: <put default model name>
+      embeddingsModel: <put default embedding model name>
+      models:
+        openai:
+          - name: <put the name>
+            model: <put the model model>
+            api_key: <put api key>
+        # azure:
+        #   - name: <put the name>
+        #     model: <put the model model>
+        #     resource_name: <put the resource's name>
+        #     api_key: <put api key> 
+        # bedrock:
+        #   - name: <put the name>
+        #     model: <put the model model>
+        #     aws_region_name: <put aws region>
+        #     aws_secret_access_key: <put aws secret access key>
+        #     aws_access_key_id: <put aws secret access key>
+
+    genEntitiesMockRequestQuery: "Medical record"
+    maxRequestsPerHour: -1
+    maxRequestsPerDay: -1
+    maxRequestsPerMonth: -1
+    maxTokensPerMonth: -1
+    maxTokensPerDay: -1
+    maxTokensPerHour: -1
+    maxTokensPerMinute: -1
+    maxTotalTokens: -1
+    storeSensitiveFieldsInStats: true
+  traceDebugInfo: false
+  logLevel: "ERROR"
+  minThreads: 1000
+
+usageLimitsRetriever:
+  enabled: false
+
+grayLog:
+  enabled: false
+
+redis:
+  enabled: false
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: NodePort
+  nodePort: 30082
+
+spacy:
+  enabled: false
+
+postgresql:
+  enabled: true
+  primary:
+    service:
+      type: NodePort
+      nodePorts:
+        postgresql: 32027
+  fullnameOverride: postgresql-ai
+  persistence:
+    enabled: true
+    existingClaim: ""
+    size: 2Gi
+  resources:
+    requests:
+      memory: 128Mi
+      cpu: 200m
+    limits:
+      memory: 1024Mi
+      cpu: 500m
+  auth:
+    username: postgres
+    password: postgres
+    database: enrichment
+    forcePassword: true
+
+mockserver:
+  enabled: false
+
+litellm:
+  enabled: true
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 500m
+    limits:
+      memory: 3096Mi
+      cpu: 1000m
+  fallbacks:
+      #<put fall back models>
+    #- azure-gpt-4o-2024-05-13: []
+    #- azure-gpt-4o-latest: []
+    - openai-gpt-4o: []
+
+ingress:
+  enabled: true
+  hosts:
+    - genai-local.com
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: '480'
+    nginx.ingress.kubernetes.io/proxy-read-timeout: '480'
+    nginx.ingress.kubernetes.io/proxy-send-timeout: '480'
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    kubernetes.io/ingress.class: nginx
+  path: /()(.*)
+
+env:
+  - name: ENRICHMENT_AuthenticationOptions__UseOAuth
+    value: "false"
+  - name: ENRICHMENT_AuthenticationOptions__IdentityProviderUrl
+    value: "https://identity.com"
+
+enrichment:
+  resources:
+    limits:
+      cpu: 600m
+      memory: 1600Mi
+    requests:
+      cpu: 200m
+      memory: 1000Mi

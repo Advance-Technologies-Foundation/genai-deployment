@@ -1,0 +1,85 @@
+{{- if .Values.ingress.enabled -}}
+{{- $fullName := include "enrichment.fullname" . -}}
+{{- $ingressApiIsStable := eq (include "ingress.isStable" .) "true" -}}
+{{- $ingressSupportsPathType := eq (include "ingress.supportsPathType" .) "true" -}}
+{{- $ingressSupportsIngressClassName := eq (include "ingress.supportsIngressClassName" .) "true" -}}
+{{- $ingressPath := .Values.ingress.path -}}
+{{- $ingressMockServerPath := .Values.ingress.mockServerPath -}}
+{{- $ingressSpacyPath := .Values.ingress.spacyPath -}}
+apiVersion: {{ template "ingress.apiVersion" . }}
+kind: Ingress
+metadata:
+  name: {{ $fullName }}
+  labels:
+    app: {{ template "enrichment.name" . }}
+    chart: {{ template "enrichment.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+{{- with .Values.ingress.annotations }}
+  annotations:
+{{ toYaml . | indent 4 }}
+{{- end }}
+spec:
+{{- if .Values.ingress.tls }}
+  tls:
+  {{- range .Values.ingress.tls }}
+    - hosts:
+      {{- range .hosts }}
+        - {{ . }}
+      {{- end }}
+      secretName: {{ .secretName }}
+  {{- end }}
+{{- end }}
+  rules:
+  {{- range .Values.ingress.hosts }}
+    - host: {{ . }}
+      http:
+        paths:
+          - path: {{ $ingressPath }}
+            {{- if $ingressSupportsPathType }}
+            pathType: ImplementationSpecific
+            {{- end }}
+            backend:
+              {{- if $ingressApiIsStable }}
+              service:
+                name: {{ $fullName }}
+                port:
+                  name: http
+              {{- else }}
+              serviceName: {{ $fullName }}
+              servicePort: http
+              {{- end }}
+        {{- if eq $.Values.mockserver.enabled true }}
+          - path: {{ $ingressMockServerPath }}
+            {{- if $ingressSupportsPathType }}
+            pathType: ImplementationSpecific
+            {{- end }}
+            backend:
+              {{- if $ingressApiIsStable }}
+              service:
+                name: mockserver
+                port:
+                  name: http
+              {{- else }}
+              serviceName: mockserver
+              servicePort: http
+              {{- end }}
+        {{- end}}
+          {{- if eq $.Values.spacy.service.enableIngressEndpoint true }}
+          - path: {{ $ingressSpacyPath }}
+            {{- if $ingressSupportsPathType }}
+            pathType: ImplementationSpecific
+            {{- end }}
+            backend:
+              {{- if $ingressApiIsStable }}
+              service:
+                name: {{ $fullName }}-spacy-ner
+                port:
+                  name: http
+              {{- else }}
+              serviceName: {{ $fullName }}-spacy-ner
+              servicePort: http
+              {{- end }}
+          {{- end}}
+  {{- end }}
+{{- end }}

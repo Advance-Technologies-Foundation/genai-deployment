@@ -1,0 +1,26 @@
+{{- if .Values.jaeger.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "enrichment.fullname" . }}-jaeger
+  labels:
+    app: {{ template "enrichment.name" . }}-jaeger
+    chart: {{ template "enrichment.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  type: {{ .Values.jaeger.service.type }}
+  ports:
+    - port: 16686
+      targetPort: ui
+      name: ui
+{{- if and (eq .Values.jaeger.service.type "NodePort") .Values.jaeger.service.nodePort }}
+      nodePort: {{ .Values.jaeger.service.nodePort }}
+{{- end }}
+    - port: 4317
+      targetPort: grpc
+      name: grpc
+  selector:
+    app: {{ include "enrichment.fullname" . }}-jaeger
+    release: {{ .Release.Name }}
+{{- end }}
