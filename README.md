@@ -267,7 +267,7 @@ ingress:
   hosts:
     - genai-local.com
 ```
-Replace <your-ingress-hostname> with your DNS name (e.g., testname.com).
+Replace "genai-local.com" with your DNS name (e.g., testname.com).
 
 ---
 
