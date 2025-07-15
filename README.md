@@ -158,4 +158,160 @@ Replace `[your_server_ip_address]` with the actual IP address or hostname of the
 
 ---
 
+# GenAI Deployment on Kubernetes using Helm
+
+This guide outlines the steps to deploy the GenAI enrichment service on a Kubernetes cluster using Helm. It includes instructions for environment setup, configuration, deployment, and integration with Creatio.
+
+---
+
+## Table of Contents
+
+1. [Prerequisites](#prerequisites)
+2. [Download Helm Files](#download-helm-files)
+3. [Configuration: `values.onsite.yaml`](#configuration-valuesonsiteyaml)
+   - [OpenAI Model Configuration](#openai-model-configuration)
+   - [Azure Model Configuration](#azure-model-configuration)
+   - [Default Model Configuration](#default-model-configuration)
+4. [Create Docker Registry Secret](#create-docker-registry-secret)
+5. [Deploy with Helm](#deploy-with-helm)
+6. [Obtain Ingress Host and NodePort](#obtain-ingress-host-and-nodeport)
+7. [Configure GenAI in Creatio](#configure-genai-in-creatio)
+
+---
+
+## Prerequisites
+
+Ensure the following components are set up:
+
+- A **Kubernetes** cluster.  
+  See: [Kubernetes Setup Guide](https://kubernetes.io/docs/home/)
+- The **Helm** package manager installed.  
+  See: [Helm Installation Guide](https://helm.sh/docs/intro/install/)
+- Valid **credentials** for accessing `registry.creatio.com`
+
+---
+
+## Download Helm Files
+
+1. Download and extract the setup files from the repository:
+
+   [GenAI Kubernetes Setup - GitHub](https://github.com/Advance-Technologies-Foundation/genai-deployment/archive/refs/heads/main.zip)
+
+2. Navigate to the `helm` directory within the extracted archive.
+
+---
+
+## Configuration: `values.onsite.yaml`
+
+Customize the deployment configuration in the `values.onsite.yaml` file depending on the LLM provider you're using.
+
+### OpenAI Model Configuration
+
+```yaml
+appConfig:
+  genAI:
+    llmProviders:
+      models:
+        openai:
+          - name: <your-model-name>
+            model: <your-model-type>
+            api_key: <your-openai-api-key>
+```
+
+**Parameters:**
+
+- `name`: A reference name for the model
+- `model`: The OpenAI model name (e.g., `gpt-4`)
+- `api_key`: Your OpenAI API key
+
+### Azure Model Configuration
+
+```yaml
+appConfig:
+  genAI:
+    llmProviders:
+      models:
+        openai:
+          - name: <your-model-name>
+            model: <your-model-type>
+            resource_name: <your-azure-resource-name>
+            api_key: <your-azure-api-key>
+```
+
+**Parameters:**
+
+- `name`: A reference name for the model
+- `model`: The deployed Azure OpenAI model
+- `resource_name`: Azure resource name
+- `api_key`: Azure API key
+
+### Default Model Configuration
+
+Define the default models to be used by the enrichment service:
+
+```yaml
+appConfig:
+  genAI:
+    llmProviders:
+      defaultModel: <your-default-model-name>
+      embeddingsModel: <your-default-embedding-model-name> # Optional
+```
+
+---
+
+## Create Docker Registry Secret
+
+Create a secret to access the Creatio Docker registry:
+
+```bash
+kubectl create secret docker-registry regcred   --docker-server=registry.creatio.com   --docker-username=<your-username>   --docker-password=<your-password>   --kubeconfig=<path-to-your-kubeconfig>
+```
+
+---
+
+## Deploy with Helm
+
+From the directory containing the `values.onsite.yaml` file, run:
+
+```bash
+helm upgrade --install genai ./enrichment   -f values.onsite.yaml   --kubeconfig <path-to-your-kubeconfig>
+```
+
+---
+
+## Obtain Ingress Host and NodePort
+
+1. Get the ingress host:
+
+   ```bash
+   kubectl get ingress genai-enrichment
+   ```
+
+   Retrieve the value under the `HOSTS` column.
+
+2. Get the service NodePort:
+
+   ```bash
+   kubectl get svc genai-enrichment
+   ```
+
+   Retrieve the NodePort value under the `PORTS` column.
+
+---
+
+## Configure GenAI in Creatio
+
+1. Log into Creatio and go to **System Settings**.
+2. Locate the setting: `Account enrichment service url`.
+3. Set its value using the following format:
+
+   ```
+   http://<ingress-host>:<node-port>
+   ```
+
+   Replace `<ingress-host>` and `<node-port>` with the actual values obtained in the previous step.
+
+---
+
 If you have any questions or require assistance, please refer to the project repository or contact support.
+
