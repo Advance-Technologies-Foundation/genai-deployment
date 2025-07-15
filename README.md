@@ -203,7 +203,7 @@ Ensure the following components are set up:
 
 ## Configuration: `values.onsite.yaml`
 
-Customize the deployment configuration in the `values.onsite.yaml` file depending on the LLM provider you're using.
+Customize the deployment configuration in the `values.onsite.yaml` file depending on the LLM provider you're using (You can configure parameters for either OpenAI, Azure, or both. Please note that if you are not using one of these providers, the corresponding section should be either commented out or removed entirely.).
 
 ### OpenAI Model Configuration
 
@@ -231,7 +231,7 @@ appConfig:
   genAI:
     llmProviders:
       models:
-        openai:
+        azure:
           - name: <your-model-name>
             model: <your-model-type>
             resource_name: <your-azure-resource-name>
@@ -247,7 +247,7 @@ appConfig:
 
 ### Default Model Configuration
 
-Define the default models to be used by the enrichment service:
+Define the default models to be used by the enrichment service (take the name from appConfig:genAI:llmProviders:models:<provider(openai or azure)>:- name):
 
 ```yaml
 appConfig:
@@ -256,6 +256,14 @@ appConfig:
       defaultModel: <your-default-model-name>
       embeddingsModel: <your-default-embedding-model-name> # Optional
 ```
+
+Specify the ingress host by setting the DNS name that points to your Linux server’s public IP in the configuration as follows:
+
+```yaml
+ingress:
+  enabled: true
+  hosts:
+    - <your-ingress-hostname>
 
 ---
 
