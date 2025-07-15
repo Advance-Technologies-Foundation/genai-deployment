@@ -172,6 +172,7 @@ This guide outlines the steps to deploy the GenAI enrichment service on a Kubern
    - [OpenAI Model Configuration](#openai-model-configuration)
    - [Azure Model Configuration](#azure-model-configuration)
    - [Default Model Configuration](#default-model-configuration)
+   - [Ingress Configuration](#ingress-configuration)
 4. [Create Docker Registry Secret](#create-docker-registry-secret)
 5. [Deploy with Helm](#deploy-with-helm)
 6. [Obtain Ingress Host and NodePort](#obtain-ingress-host-and-nodeport)
@@ -256,6 +257,7 @@ appConfig:
       defaultModel: <your-default-model-name>
       embeddingsModel: <your-default-embedding-model-name> # Optional
 ```
+### Ingress Configuration
 
 Specify the ingress host by setting the DNS name that points to your Linux server’s public IP in the configuration as follows:
 
