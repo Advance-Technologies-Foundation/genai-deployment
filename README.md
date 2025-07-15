@@ -263,7 +263,9 @@ Specify the ingress host by setting the DNS name that points to your Linux serve
 ingress:
   enabled: true
   hosts:
-    - <your-ingress-hostname>
+    - genai-local.com
+```
+Replace <your-ingress-hostname> with your DNS name (e.g., testname.com).
 
 ---
 
