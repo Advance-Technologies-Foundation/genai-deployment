@@ -119,11 +119,10 @@ litellm:
     limits:
       memory: 3096Mi
       cpu: 1000m
-  fallbacks:
+  #fallbacks:
       #<put fall back models>
-    #- azure-gpt-4o-2024-05-13: []
-    #- azure-gpt-4o-latest: []
-    - openai-gpt-4o: []
+      #- azure-gpt-4o-2024-05-13: []
+      #- openai-gpt-4o: []
 
 ingress:
   enabled: true
