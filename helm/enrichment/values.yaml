@@ -1,24 +1,31 @@
 replicaCount: 5
 
+dockerRegistry:
+  enabled: false
+  secretName: registry-creatio-secret
+  server: registry.creatio.com
+  username: <your-username>
+  password: <your-password>
+  email: <your-email>
+
 commonImagesConfig:
   strategy: RollingUpdate
   pullPolicy: IfNotPresent
-  useImagePullSecret: false
+  imagePullSecretEnabled: false
+  imagePullSecrets:
+    - name: registry-creatio-secret
 
 enrichmentServiceImage:
   repository: registry.creatio.com/enrichment-service
   tag: 1.0.663
-  pullPolicy: IfNotPresent
 
 spacyNerImage:
   repository: registry.creatio.com/spacy-ner
   tag: 1.0.663
-  pullPolicy: IfNotPresent
 
 flywayImage:
   repository: registry.creatio.com/enrichment-flyway
   tag: 1.0.663
-  pullPolicy: IfNotPresent
 
 appConfig:
   redis:
@@ -27,10 +34,10 @@ appConfig:
   db:
       host: postgres
       port: 5432
-      user: user
-      password: password
-      database: postgres
-      schema: enrichment
+      user: <your-postgres-user>
+      password: <your-postgres-password>
+      database: genai
+      schema: genai
   accountManagementBaseServiceUrl: "http://185.99.10.125:8080"
   knitEngine:
     spacy:

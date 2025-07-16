@@ -11,7 +11,6 @@ spec:
   replicas: {{ .Values.replicaCount }}
   strategy:
     type: {{ .Values.commonImagesConfig.strategy }}
-    rollingUpdate: null
   selector:
     matchLabels:
       app: {{ template "enrichment.name" . }}
@@ -26,9 +25,9 @@ spec:
         prometheus.io/path: "/metrics"
         prometheus.io/port: {{ .Values.service.port | quote }}
     spec:
-{{ if .Values.commonImagesConfig.useImagePullSecret }}
+{{ if .Values.commonImagesConfig.imagePullSecretEnabled }}
       imagePullSecrets:
-        {{- toYaml .Values.enrichmentServiceImage.imagePullSecrets | nindent 8 }}
+        {{- toYaml .Values.commonImagesConfig.imagePullSecrets | nindent 8 }}
 {{- end }}
       volumes:
         - name: application-config

@@ -12,7 +12,6 @@ spec:
   replicas: 1
   strategy:
     type: {{ .Values.commonImagesConfig.strategy }}
-    rollingUpdate: null
   selector:
     matchLabels:
       app: {{ template "enrichment.name" . }}-spacy-ner
@@ -23,10 +22,10 @@ spec:
         app: {{ template "enrichment.name" . }}-spacy-ner
         release: {{ .Release.Name }}
     spec:
-    {{ if .Values.commonImagesConfig.useImagePullSecret }}
+{{ if .Values.commonImagesConfig.imagePullSecretEnabled }}
       imagePullSecrets:
-        {{- toYaml .Values.enrichmentServiceImage.imagePullSecrets | nindent 8 }}
-    {{- end }}
+        {{- toYaml .Values.commonImagesConfig.imagePullSecrets | nindent 8 }}
+{{- end }}
       containers:
         - name: {{ template "enrichment.name" . }}-spacy-ner
           image: "{{ .Values.spacyNerImage.repository }}:{{ .Values.spacyNerImage.tag }}"

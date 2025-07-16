@@ -1,7 +1,7 @@
 apiVersion: v2
-description: A Helm chart for Kubernetes
+description: A Helm chart for Enrichment Service
 name: enrichment
-version: 1.0.570
+version: 1.0.663
 dependencies:
   - name: redis
     version: "21.1.11"

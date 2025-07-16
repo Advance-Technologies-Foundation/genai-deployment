@@ -19,14 +19,14 @@ spec:
         release: "{{ .Release.Name }}"
     spec:
       restartPolicy: Never
-{{ if .Values.commonImagesConfig.useImagePullSecret }}
+{{ if .Values.commonImagesConfig.imagePullSecretEnabled }}
       imagePullSecrets:
-        {{- toYaml .Values.flywayImage.imagePullSecrets | nindent 8 }}
+        {{- toYaml .Values.commonImagesConfig.imagePullSecrets | nindent 8 }}
 {{- end }}
       containers:
         - name: {{ template "enrichment.fullname" . }}-flyway
           image: "{{ .Values.flywayImage.repository }}:{{ .Values.flywayImage.tag }}"
-          imagePullPolicy: {{ .Values.flywayImage.pullPolicy }}
+          imagePullPolicy: {{ .Values.commonImagesConfig.pullPolicy }}
           resources:
             {{ toYaml .Values.flyway.resources | nindent 12 }}
           args:

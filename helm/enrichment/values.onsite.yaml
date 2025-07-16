@@ -1,47 +1,57 @@
 replicaCount: 1
 
+dockerRegistry:
+  enabled: true
+  username: <your-username>
+  password: <your-password>
+  email: <your-email>
+
 commonImagesConfig:
-  strategy: RollingUpdate
-  pullPolicy: IfNotPresent
-  useImagePullSecret: true
+  imagePullSecretEnabled: true
 
-enrichmentServiceImage:
-  repository: registry.creatio.com/enrichment-service
-  pullPolicy: IfNotPresent
-  imagePullSecrets:
-    - name: regcred
+enrichment:
+  resources:
+    limits:
+      cpu: 600m
+      memory: 1600Mi
+    requests:
+      cpu: 200m
+      memory: 1000Mi
 
-flywayImage:
-  repository: registry.creatio.com/enrichment-flyway
-  pullPolicy: IfNotPresent
-  imagePullSecrets:
-    - name: regcred
+env:
+  - name: ENRICHMENT_AuthenticationOptions__UseOAuth
+    value: "false"
+  - name: ENRICHMENT_AuthenticationOptions__IdentityProviderUrl
+    value: "http://localhost"
 
 appConfig:
   redis:
     enabled: false
   db:
-    host: postgresql-ai
+    host: postgresql-genai
     port: 5432
     user: postgres
     password: postgres
-    database: enrichment
-    schema: enrichment
+    database: genai
+    schema: genai
   genAI:
     llmProviders:
       type: custom
-      defaultModel: <put default model name>
-      embeddingsModel: <put default embedding model name>
+      defaultModel: gpt-4o
+      embeddingsModel: text-embedding-3-large
       models:
         openai:
-          - name: <put the name>
-            model: <put the model model>
-            api_key: <put api key>
+          - name: gpt-4o
+            model: gpt-4o
+            api_key: <your_openai_api_key>
+          - name: text-embedding-3-large
+            model: text-embedding-3-large
+            api_key: <your_openai_api_key>
         # azure:
         #   - name: <put the name>
         #     model: <put the model model>
         #     resource_name: <put the resource's name>
-        #     api_key: <put api key> 
+        #     api_key: <put api key>
 
     genEntitiesMockRequestQuery: "Medical record"
     maxRequestsPerHour: -1
@@ -78,12 +88,12 @@ spacy:
 
 postgresql:
   enabled: true
-  primary:
-    service:
-      type: NodePort
-      nodePorts:
-        postgresql: 32027
-  fullnameOverride: postgresql-ai
+#  primary:
+#    service:
+#      type: NodePort
+#      nodePorts:
+#        postgresql: 32027
+  fullnameOverride: postgresql-genai
   persistence:
     enabled: true
     existingClaim: ""
@@ -98,7 +108,7 @@ postgresql:
   auth:
     username: postgres
     password: postgres
-    database: enrichment
+    database: genai
     forcePassword: true
 
 mockserver:
@@ -119,9 +129,9 @@ litellm:
       #- openai-gpt-4o: []
 
 ingress:
-  enabled: true
+  enabled: false
   hosts:
-    - genai-local.com
+    - genai.example.com
   annotations:
     nginx.ingress.kubernetes.io/proxy-connect-timeout: '480'
     nginx.ingress.kubernetes.io/proxy-read-timeout: '480'
@@ -129,18 +139,3 @@ ingress:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
     kubernetes.io/ingress.class: nginx
   path: /()(.*)
-
-env:
-  - name: ENRICHMENT_AuthenticationOptions__UseOAuth
-    value: "false"
-  - name: ENRICHMENT_AuthenticationOptions__IdentityProviderUrl
-    value: "https://identity.com"
-
-enrichment:
-  resources:
-    limits:
-      cpu: 600m
-      memory: 1600Mi
-    requests:
-      cpu: 200m
-      memory: 1000Mi
