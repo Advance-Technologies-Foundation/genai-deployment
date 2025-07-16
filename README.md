@@ -125,7 +125,7 @@ Set the default models used by GenAI:
 ---
 
 ## Log in to Docker Registry
-Run this command, replace <your-username> and <your-password> with your actual credentials:
+Run this command, replace your-username and your-password with your actual credentials:
 
 ```bash
 docker login registry.creatio.com -u your-username -p your-password
