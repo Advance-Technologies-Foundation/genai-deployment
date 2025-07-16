@@ -198,7 +198,7 @@ Ensure the following components are set up:
 
    [GenAI Kubernetes Setup - GitHub](https://github.com/Advance-Technologies-Foundation/genai-deployment/archive/refs/heads/main.zip)
 
-2. Navigate to the `helm` directory within the extracted archive.
+2. Navigate to the `helm/enrichment` directory within the extracted archive.
 
 ---
 
@@ -286,7 +286,7 @@ kubectl create secret docker-registry regcred   --docker-server=registry.creatio
 From the directory containing the `values.onsite.yaml` file, run:
 
 ```bash
-helm upgrade --install genai ./enrichment   -f values.onsite.yaml   --kubeconfig <path-to-your-kubeconfig>
+helm upgrade --install genai . -f values.onsite.yaml --kubeconfig <path-to-your-kubeconfig>
 ```
 
 ---

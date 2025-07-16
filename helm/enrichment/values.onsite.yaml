@@ -42,12 +42,6 @@ appConfig:
         #     model: <put the model model>
         #     resource_name: <put the resource's name>
         #     api_key: <put api key> 
-        # bedrock:
-        #   - name: <put the name>
-        #     model: <put the model model>
-        #     aws_region_name: <put aws region>
-        #     aws_secret_access_key: <put aws secret access key>
-        #     aws_access_key_id: <put aws secret access key>
 
     genEntitiesMockRequestQuery: "Medical record"
     maxRequestsPerHour: -1
@@ -123,7 +117,7 @@ litellm:
       #<put fall back models>
     #- azure-gpt-4o-2024-05-13: []
     #- azure-gpt-4o-latest: []
-    - openai-gpt-4o: []
+    #- openai-gpt-4o: []
 
 ingress:
   enabled: true
