@@ -7,17 +7,17 @@ commonImagesConfig:
 
 enrichmentServiceImage:
   repository: registry.creatio.com/enrichment-service
-  tag: 1.0.649
+  tag: 1.0.663
   pullPolicy: IfNotPresent
 
 spacyNerImage:
   repository: registry.creatio.com/spacy-ner
-  tag: 1.0.649
+  tag: 1.0.663
   pullPolicy: IfNotPresent
 
 flywayImage:
   repository: registry.creatio.com/enrichment-flyway
-  tag: 1.0.649
+  tag: 1.0.663
   pullPolicy: IfNotPresent
 
 appConfig:
