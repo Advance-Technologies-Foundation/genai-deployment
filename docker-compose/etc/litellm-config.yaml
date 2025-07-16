@@ -20,4 +20,4 @@ model_list:
       api_key: os.environ/AZURE_API_TEXT_EMBEDDING
       api_version: "2024-10-21"
 general_settings:
-  master_key: os.environ/PROXY_MASTER_KEY
+  master_key: sk-default
