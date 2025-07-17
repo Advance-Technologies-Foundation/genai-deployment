@@ -34,7 +34,6 @@ appConfig:
     schema: genai
   genAI:
     llmProviders:
-      type: custom
       defaultModel: gpt-4o
 #      embeddingsModel: text-embedding-3-large
       models:
@@ -84,12 +83,6 @@ ingress:
   hosts:
     - genai.example.com
 
-grayLog:
-  enabled: false
-
-redis:
-  enabled: false
-
 spacy:
   enabled: false
 
@@ -112,8 +105,6 @@ postgresql:
     password: postgres
     database: genai
     forcePassword: true
-mockserver:
-  enabled: false
 
 litellm:
   enabled: true
