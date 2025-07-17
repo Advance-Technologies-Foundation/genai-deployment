@@ -445,8 +445,6 @@ curl -X GET http://genai.yourdomain.com/health
 2. **Send a test message**: "Hi, how are you?"
 3. **Verify response**: You should receive a response from the AI assistant
 
-**Expected behavior:** The AI should respond appropriately, indicating the GenAI service is working correctly.
-
 ---
 
 If you have any questions or require assistance, please refer to the project repository or contact support.
