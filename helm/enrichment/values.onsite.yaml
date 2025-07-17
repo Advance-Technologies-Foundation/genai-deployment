@@ -25,8 +25,6 @@ env:
     value: "http://localhost"
 
 appConfig:
-  redis:
-    enabled: false
   db:
     host: postgresql-genai
     port: 5432
@@ -38,22 +36,21 @@ appConfig:
     llmProviders:
       type: custom
       defaultModel: gpt-4o
-      embeddingsModel: text-embedding-3-large
+#      embeddingsModel: text-embedding-3-large
       models:
         openai:
           - name: gpt-4o
             model: gpt-4o
             api_key: <your_openai_api_key>
-          - name: text-embedding-3-large
-            model: text-embedding-3-large
-            api_key: <your_openai_api_key>
+#          - name: text-embedding-3-large
+#            model: text-embedding-3-large
+#            api_key: <your_openai_api_key>
         # azure:
         #   - name: <put the name>
         #     model: <put the model model>
         #     resource_name: <put the resource's name>
         #     api_key: <put api key>
 
-    genEntitiesMockRequestQuery: "Medical record"
     maxRequestsPerHour: -1
     maxRequestsPerDay: -1
     maxRequestsPerMonth: -1
@@ -62,26 +59,36 @@ appConfig:
     maxTokensPerHour: -1
     maxTokensPerMinute: -1
     maxTotalTokens: -1
-    storeSensitiveFieldsInStats: true
+    storeSensitiveFieldsInStats: false
   traceDebugInfo: false
   logLevel: "ERROR"
   minThreads: 1000
+  redis:
+    enabled: false
 
 usageLimitsRetriever:
   enabled: false
+
+service:
+  type: NodePort
+  nodePort: 30082
+
+ingress:
+  enabled: false
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: "/"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: '480'
+    nginx.ingress.kubernetes.io/proxy-read-timeout: '480'
+    nginx.ingress.kubernetes.io/proxy-send-timeout: '480'
+  hosts:
+    - genai.example.com
 
 grayLog:
   enabled: false
 
 redis:
   enabled: false
-
-nameOverride: ""
-fullnameOverride: ""
-
-service:
-  type: NodePort
-  nodePort: 30082
 
 spacy:
   enabled: false
@@ -98,7 +105,7 @@ postgresql:
         memory: 1024Mi
         cpu: 500m
     persistence:
-      enabled: true
+      enabled: false
       size: 50Gi
   auth:
     username: postgres
@@ -121,14 +128,3 @@ litellm:
       #<put fall back models>
       #- azure-gpt-4o-2024-05-13: []
       #- openai-gpt-4o: []
-
-ingress:
-  enabled: false
-  className: nginx
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: "/"
-    nginx.ingress.kubernetes.io/proxy-connect-timeout: '480'
-    nginx.ingress.kubernetes.io/proxy-read-timeout: '480'
-    nginx.ingress.kubernetes.io/proxy-send-timeout: '480'
-  hosts:
-    - genai.example.com
