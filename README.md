@@ -101,7 +101,7 @@ Configure the GenAI service containers by setting environment variables in the `
 
 Provide parameters depending on the Large Language Model (LLM) service you are using:
 
-###### For OpenAI LLM
+##### `For OpenAI LLM`
 
 | Variable                     | Description                                               |
 |------------------------------|-----------------------------------------------------------|
@@ -109,7 +109,7 @@ Provide parameters depending on the Large Language Model (LLM) service you are u
 | `OPENAI_EMBEDDING_MODEL`    | OpenAI provider and embedding model ID (e.g. openai/gpt-4o)         |
 | `OPENAI_API_KEY`              | Your OpenAI API key to authenticate API requests.         |
 | `OPENAI_API_KEY_TEXT_EMBEDDING` | *(Optional)* Separate key for OpenAI text embedding service if different from main key. |
-###### For Azure OpenAI LLM
+##### `For Azure OpenAI LLM`
 
 | Variable                     | Description                                               |
 |------------------------------|-----------------------------------------------------------|
@@ -123,9 +123,9 @@ Provide parameters depending on the Large Language Model (LLM) service you are u
 | `AZURE_EMBEDDING_API_BASE`          | The base URL of your Azure OpenAI endpoint (text embeddings model). This is typically in the format https://<your-resource-name>.openai.azure.com. It's used to construct full API request URLs. |
 | `AZURE_API_VERSION`          | The version of the Azure OpenAI API to use. For example: 2023-07-01-preview. This must match a supported version by Azure and may change over time as the API evolves. |
 
-###### Default Models
+##### `Default Models`
 
-Set the default models used by GenAI:
+Set the default models used by GenAI (put model names of the provider that has to be used by default. You can teake them from corresponding "openai" or "azure" sections):
 
 | Variable                     | Description                                               |
 |------------------------------|-----------------------------------------------------------|
@@ -175,8 +175,6 @@ Replace `[your_server_ip_address]` with the actual IP address or hostname of the
 ---
 
 ### Install by kubernetes
-
----
 
 #### Prerequisites
 
