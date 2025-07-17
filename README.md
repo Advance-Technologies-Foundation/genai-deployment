@@ -285,11 +285,11 @@ appConfig:
           - name: gpt-4o
             model: gpt-4o
             api_key: sk-your-openai-api-key  # Replace with your actual OpenAI API key
-          - name: text-embedding-3-small
-            model: text-embedding-3-small
-            api_key: sk-your-openai-api-key  # Replace with your actual OpenAI API key
+          # - name: text-embedding-3-small  # Optional embedding model (disabled by default)
+          #   model: text-embedding-3-small
+          #   api_key: sk-your-openai-api-key  # Replace with your actual OpenAI API key
       defaultModel: gpt-4o
-      embeddingsModel: text-embedding-3-small # Optional
+      # embeddingsModel: text-embedding-3-small # Optional - uncomment if using embeddings
 ```
 
 ###### Option B: Azure Configuration
@@ -306,12 +306,12 @@ appConfig:
             model: gpt-4o-2024-11-20  # Replace with your actual Azure model deployment
             resource_name: your-azure-resource  # Replace with your actual Azure resource name
             api_key: your-azure-api-key  # Replace with your actual Azure API key
-          - name: azure-text-embedding
-            model: text-embedding-3-small  # Replace with your actual Azure embedding model
-            resource_name: your-azure-resource  # Replace with your actual Azure resource name
-            api_key: your-azure-api-key  # Replace with your actual Azure API key
+          # - name: azure-text-embedding  # Optional embedding model (disabled by default)
+          #   model: text-embedding-3-small  # Replace with your actual Azure embedding model
+          #   resource_name: your-azure-resource  # Replace with your actual Azure resource name
+          #   api_key: your-azure-api-key  # Replace with your actual Azure API key
       defaultModel: azure-gpt-4o
-      embeddingsModel: azure-text-embedding # Optional
+      # embeddingsModel: azure-text-embedding # Optional - uncomment if using embeddings
 ```
 
 **Parameter descriptions:**
