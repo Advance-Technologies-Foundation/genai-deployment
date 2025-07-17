@@ -88,29 +88,22 @@ spacy:
 
 postgresql:
   enabled: true
-#  primary:
-#    service:
-#      type: NodePort
-#      nodePorts:
-#        postgresql: 32027
   fullnameOverride: postgresql-genai
-  persistence:
-    enabled: true
-    existingClaim: ""
-    size: 2Gi
-  resources:
-    requests:
-      memory: 128Mi
-      cpu: 200m
-    limits:
-      memory: 1024Mi
-      cpu: 500m
+  primary:
+    resources:
+      requests:
+        memory: 128Mi
+        cpu: 200m
+      limits:
+        memory: 1024Mi
+        cpu: 500m
+    persistence:
+      size: 50Gi
   auth:
     username: postgres
     password: postgres
     database: genai
     forcePassword: true
-
 mockserver:
   enabled: false
 
