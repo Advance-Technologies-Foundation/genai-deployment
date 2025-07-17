@@ -267,6 +267,15 @@ appConfig:
 ```
 ### Docker registry credentials
 
+Provide credentials for "registry.creatio.com" Docker registry so images can be pulled during deployment. Replace with your actual username, password, and email.
+
+```yaml
+dockerRegistry:
+  username: <your-username>   
+  password: <your-password>   
+  email: <your-email>         
+```
+
 ### Ingress Configuration
 
 Specify the ingress host by setting the DNS name that points to your Linux server’s public IP in the configuration as follows:
