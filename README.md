@@ -376,14 +376,14 @@ helm upgrade --install genai . -f values.onsite.yaml
 Before configuring Creatio, verify that your Kubernetes deployment is running successfully:
 
 ```bash
-# Check if all pods are running
+# Check if all pods are running (exclude only the flyway)
 kubectl get pods
 
 # Check service status
 kubectl get services
 ```
 
-**Expected output:** All pods should be in `Running` status and the service should show the NodePort (default: 30082).
+**Expected output:** All pods should be in `Running` (exclude only the flyway) status and the service should show the NodePort (default: 30082).
 
 ##### Determine Service URL
 
