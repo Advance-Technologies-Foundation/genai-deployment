@@ -1,4 +1,3 @@
-
 # GenAI Setup Guide
 
 ---
@@ -47,12 +46,12 @@ A service that provides an abstraction layer for **Large Language Model (LLM)** 
 
 #### `postgres`
 A PostgreSQL database used for storing:
-- GenAI configuration data (e.g., promts)
+- GenAI configuration data (e.g., prompts)
 - Operational statistics (e.g., request logs)
 
-## Instalation
+## Installation
 
-### Install by docker compose
+### Install with Docker Compose
 
 #### Install Docker
 
@@ -69,14 +68,14 @@ docker --version
 
 ---
 
-#### Install Docker-Compose
+#### Install Docker Compose
 
-1. Install Docker-Compose on your Linux machine.
+1. Install Docker Compose on your Linux machine.
 
-Refer to the official Docker-Compose installation guide:  
+Refer to the official Docker Compose installation guide:  
 https://docs.docker.com/compose/install/
 
-Verify Docker-Compose installation by running:
+Verify Docker Compose installation by running:
 
 ```bash
 docker-compose --version
@@ -84,12 +83,12 @@ docker-compose --version
 
 ---
 
-#### Download docker compose files
+#### Download Docker Compose files
 
 1. Download and unpack the archive with the setup files from the repository:  
-   [GenAI Docker-Compose Setup](https://github.com/Advance-Technologies-Foundation/genai-deployment/archive/refs/heads/main.zip)
+   [GenAI Docker Compose Setup](https://github.com/Advance-Technologies-Foundation/genai-deployment/archive/refs/heads/main.zip)
 
-2. Go to the docker-compose folder
+2. Navigate to the docker-compose folder
 
 ---
 
@@ -101,20 +100,21 @@ Configure the GenAI service containers by setting environment variables in the `
 
 Provide parameters depending on the Large Language Model (LLM) service you are using:
 
-##### `For OpenAI LLM`
+##### For OpenAI LLM
 
 | Variable                     | Description                                               |
 |------------------------------|-----------------------------------------------------------|
-| `OPENAI_MODEL`              | OpenAI provider and model ID (e.g. openai/gpt-4o)         |
-| `OPENAI_EMBEDDING_MODEL`    | OpenAI provider and embedding model ID (e.g. openai/gpt-4o)         |
+| `OPENAI_MODEL`              | OpenAI provider and model ID (e.g., openai/gpt-4o)         |
+| `OPENAI_EMBEDDING_MODEL`    | OpenAI provider and embedding model ID (e.g., openai/gpt-4o)         |
 | `OPENAI_API_KEY`              | Your OpenAI API key to authenticate API requests.         |
 | `OPENAI_API_KEY_TEXT_EMBEDDING` | *(Optional)* Separate key for OpenAI text embedding service if different from main key. |
-##### `For Azure OpenAI LLM`
+
+##### For Azure OpenAI LLM
 
 | Variable                     | Description                                               |
 |------------------------------|-----------------------------------------------------------|
-| `AZURE_MODEL`               | Azure provider and model ID (e.g. azure/gpt-4o-2024-11-20)     |
-| `AZURE_EMBEDDING_MODEL`     | Azure provider and embedding model ID (e.g. azure/gpt-4o-2024-11-20)      |
+| `AZURE_MODEL`               | Azure provider and model ID (e.g., azure/gpt-4o-2024-11-20)     |
+| `AZURE_EMBEDDING_MODEL`     | Azure provider and embedding model ID (e.g., azure/gpt-4o-2024-11-20)      |
 | `AZURE_API_KEY`               | Azure API key (subscription key) for authentication.      |
 | `AZURE_API_TEXT_EMBEDDING`   | *(Optional)* Separate API key or token for Azure text embedding service. |
 | `AZURE_DEPLOYMENTID`          | Deployment ID or name of the Azure OpenAI model to use.   |
@@ -123,9 +123,9 @@ Provide parameters depending on the Large Language Model (LLM) service you are u
 | `AZURE_EMBEDDING_API_BASE`          | The base URL of your Azure OpenAI endpoint (text embeddings model). This is typically in the format https://<your-resource-name>.openai.azure.com. It's used to construct full API request URLs. |
 | `AZURE_API_VERSION`          | The version of the Azure OpenAI API to use. For example: 2023-07-01-preview. This must match a supported version by Azure and may change over time as the API evolves. |
 
-##### `Default Models`
+##### Default Models
 
-Set the default models used by GenAI (put model names of the provider that has to be used by default. You can teake them from corresponding "openai" or "azure" sections):
+Set the default models used by GenAI (put model names of the provider that has to be used by default. You can take them from corresponding "openai" or "azure" sections):
 
 | Variable                     | Description                                               |
 |------------------------------|-----------------------------------------------------------|
@@ -135,7 +135,7 @@ Set the default models used by GenAI (put model names of the provider that has t
 ---
 
 #### Log in to Docker Registry
-Run this command, replace your-username and your-password with your actual credentials:
+Run this command, replacing your-username and your-password with your actual credentials:
 
 ```bash
 docker login registry.creatio.com -u your-username -p your-password
@@ -174,7 +174,7 @@ Replace `[your_server_ip_address]` with the actual IP address or hostname of the
 
 ---
 
-### Install by kubernetes
+### Install via Kubernetes
 
 #### Prerequisites
 
@@ -253,7 +253,8 @@ appConfig:
       defaultModel: <your-default-model-name>
       embeddingsModel: <your-default-embedding-model-name> # Optional
 ```
-##### Docker registry credentials
+
+##### Docker Registry Credentials
 
 Provide credentials for "registry.creatio.com" Docker registry so images can be pulled during deployment. Replace with your actual username, password, and email.
 
@@ -266,7 +267,7 @@ dockerRegistry:
 
 ##### Ingress Configuration
 
-Specify the ingress host by setting the DNS name that points to your Linux server’s public IP in the configuration as follows:
+Specify the ingress host by setting the DNS name that points to your Linux server's public IP in the configuration as follows:
 
 ```yaml
 ingress:
@@ -286,6 +287,8 @@ From the directory containing the `values.onsite.yaml` file, run:
 helm upgrade --install genai . -f values.onsite.yaml --kubeconfig <path-to-your-kubeconfig>
 ```
 
+**Note:** By default, PostgreSQL runs without persistent storage enabled in the Kubernetes deployment. This is normal behavior since the database only stores non-critical information such as request counts and token usage statistics. If persistent storage is needed, it can be enabled by setting `postgresql.primary.persistence.enabled: true` in the values file.
+
 ---
 
 #### Configure GenAI in Creatio
@@ -298,9 +301,10 @@ helm upgrade --install genai . -f values.onsite.yaml --kubeconfig <path-to-your-
    http://<kubernetes_ip_or_hostname>:30082
    ```
 
-   Replace `<kubernetes_ip_or_hostname>` with your the actual values.
+   Replace `<kubernetes_ip_or_hostname>` with the actual values.
+
+**Note:** By default, the enrichment service is accessible through a NodePort service on port 30082. You can change the NodePort by setting `service.nodePort` in your values file. If you prefer to use Ingress instead of NodePort, you can enable it by setting `ingress.enabled: true` in your values file and configuring the appropriate ingress controller and host settings.
 
 ---
 
 If you have any questions or require assistance, please refer to the project repository or contact support.
-
