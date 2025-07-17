@@ -413,12 +413,12 @@ http://genai.example.com
 
 **For NodePort:**
 ```bash
-curl -X GET http://192.168.1.100:30082/health  # Replace 192.168.1.100 with your actual node IP
+curl -X GET http://192.168.1.100:30082/readiness  # Replace 192.168.1.100 with your actual node IP
 ```
 
 **For Ingress:**
 ```bash
-curl -X GET http://genai.yourdomain.com/health
+curl -X GET http://genai.yourdomain.com/readiness
 ```
 
 **Expected response:** HTTP 200 with health status information.
