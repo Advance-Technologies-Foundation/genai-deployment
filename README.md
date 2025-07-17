@@ -440,7 +440,3 @@ curl -X GET http://genai.yourdomain.com/readiness
 1. **Open Creatio AI Chat** feature in your Creatio interface
 2. **Send a test message**: "Hi, how are you?"
 3. **Verify response**: You should receive a response from the AI assistant
-
----
-
-If you have any questions or require assistance, please refer to the project repository or contact support.
