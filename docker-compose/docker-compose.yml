@@ -17,7 +17,7 @@ services:
     environment:
       - "ConnectionStrings__Db=Host=${POSTGRES_HOST:-enrichment-postgres};Port=${POSTGRES_PORT:-5432};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres};Database=${POSTGRES_DB:-postgres};SearchPath=${POSTGRES_SEARCHPATH:-enrichment};"
       - "GenAI__CustomDomain=http://litellm:4000"
-      - "GenAI__ProviderType=${GenAI__ProviderType}"    
+      - "GenAI__ProviderType=${GenAI__ProviderType:--1}"    
       - "GenAI__DefaultModel=${GenAI__DefaultModel}"
       - "GenAI__EmbeddingsModel=${GenAI__EmbeddingsModel}"
       - "GenAI__AzureResourceName=${AZURE_RESOURCENAME}"

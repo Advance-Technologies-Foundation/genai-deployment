@@ -98,7 +98,6 @@ Provide parameters depending on the Large Language Model (LLM) service you are u
 | `OPENAI_EMBEDDING_MODEL`    | OpenAI provider and embedding model ID (e.g. openai/gpt-4o)         |
 | `OPENAI_API_KEY`              | Your OpenAI API key to authenticate API requests.         |
 | `OPENAI_API_KEY_TEXT_EMBEDDING` | *(Optional)* Separate key for OpenAI text embedding service if different from main key. |
-
 #### For Azure OpenAI LLM
 
 | Variable                     | Description                                               |
@@ -180,6 +179,7 @@ This guide outlines the steps to deploy the GenAI enrichment service on a Kubern
    - [OpenAI Model Configuration](#openai-model-configuration)
    - [Azure Model Configuration](#azure-model-configuration)
    - [Default Model Configuration](#default-model-configuration)
+   - [Docker registry credentials](#docker-registry-credentials)
    - [Ingress Configuration](#ingress-configuration)
 4. [Create Docker Registry Secret](#create-docker-registry-secret)
 5. [Deploy with Helm](#deploy-with-helm)
@@ -265,6 +265,8 @@ appConfig:
       defaultModel: <your-default-model-name>
       embeddingsModel: <your-default-embedding-model-name> # Optional
 ```
+### Docker registry credentials
+
 ### Ingress Configuration
 
 Specify the ingress host by setting the DNS name that points to your Linux server’s public IP in the configuration as follows:
