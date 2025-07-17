@@ -181,10 +181,9 @@ This guide outlines the steps to deploy the GenAI enrichment service on a Kubern
    - [Default Model Configuration](#default-model-configuration)
    - [Docker registry credentials](#docker-registry-credentials)
    - [Ingress Configuration](#ingress-configuration)
-4. [Create Docker Registry Secret](#create-docker-registry-secret)
-5. [Deploy with Helm](#deploy-with-helm)
-6. [Obtain Ingress Host and NodePort](#obtain-ingress-host-and-nodeport)
-7. [Configure GenAI in Creatio](#configure-genai-in-creatio)
+4. [Deploy with Helm](#deploy-with-helm)
+5. [Obtain Ingress Host and NodePort](#obtain-ingress-host-and-nodeport)
+6. [Configure GenAI in Creatio](#configure-genai-in-creatio)
 
 ---
 
@@ -287,16 +286,6 @@ ingress:
     - genai-local.com
 ```
 Replace "genai-local.com" with your DNS name (e.g., testname.com).
-
----
-
-## Create Docker Registry Secret
-
-Create a secret to access the Creatio Docker registry:
-
-```bash
-kubectl create secret docker-registry regcred   --docker-server=registry.creatio.com   --docker-username=<your-username>   --docker-password=<your-password>   --kubeconfig=<path-to-your-kubeconfig>
-```
 
 ---
 
