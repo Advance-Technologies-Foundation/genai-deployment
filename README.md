@@ -194,7 +194,7 @@ Ensure the following components are set up:
 
    [GenAI Kubernetes Setup - GitHub](https://github.com/Advance-Technologies-Foundation/genai-deployment/archive/refs/heads/main.zip)
 
-2. Navigate to the `helm/enrichment` directory within the extracted archive.
+2. Navigate to the `helm/genai` directory within the extracted archive.
 
 ---
 
