@@ -82,7 +82,7 @@ docker-compose --version
 #### Download Docker Compose files
 
 1. Download and unpack the archive with the setup files from the repository:  
-   [GenAI Docker Compose Setup](https://github.com/Advance-Technologies-Foundation/genai-deployment/archive/refs/heads/main.zip)
+   [GenAI Docker Compose Setup - GitHub latest release](https://github.com/Advance-Technologies-Foundation/genai-deployment/releases/latest)
 
 2. Navigate to the docker-compose folder
 
@@ -230,7 +230,7 @@ docker login registry.creatio.com -u your-username -p your-password
 
 1. Download and extract the setup files from the repository:
 
-   [GenAI Kubernetes Setup - GitHub](https://github.com/Advance-Technologies-Foundation/genai-deployment/archive/refs/heads/main.zip)
+   [GenAI Kubernetes Setup - GitHub latest release](https://github.com/Advance-Technologies-Foundation/genai-deployment/releases/latest)
 
 2. Navigate to the `helm/genai` directory within the extracted archive.
 
