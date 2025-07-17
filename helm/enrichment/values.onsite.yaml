@@ -98,6 +98,7 @@ postgresql:
         memory: 1024Mi
         cpu: 500m
     persistence:
+      enabled: true
       size: 50Gi
   auth:
     username: postgres
@@ -123,12 +124,11 @@ litellm:
 
 ingress:
   enabled: false
-  hosts:
-    - genai.example.com
+  className: nginx
   annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: "/"
     nginx.ingress.kubernetes.io/proxy-connect-timeout: '480'
     nginx.ingress.kubernetes.io/proxy-read-timeout: '480'
     nginx.ingress.kubernetes.io/proxy-send-timeout: '480'
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-    kubernetes.io/ingress.class: nginx
-  path: /()(.*)
+  hosts:
+    - genai.example.com

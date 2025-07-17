@@ -185,12 +185,10 @@ usageLimitsRetriever:
 
 ingress:
   enabled: false
-  annotations:
-    ingress.class: haproxy
-    ingress.kubernetes.io/rewrite-target: "/"
-    ingress.kubernetes.io/ssl-redirect: "false"
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
+  annotations: {}
+#    ingress.class: haproxy
+#    ingress.kubernetes.io/rewrite-target: "/"
+#    ingress.kubernetes.io/ssl-redirect: "false"
   mockServerPath: /mockserver
   spacyPath: /spacy
   path: /
