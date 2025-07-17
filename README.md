@@ -184,7 +184,8 @@ The Kubernetes deployment process consists of the following steps:
 2. **Download Files** - Get the Helm chart files (~2 minutes)
 3. **Configuration** - Configure your `values.onsite.yaml` file (~10-15 minutes)
 4. **Deploy** - Install the application with Helm (~3-5 minutes)
-5. **Verify and Configure** - Set up and test the connection in Creatio (~5 minutes)
+5. **Verify Deployment** - Check deployment status and test API endpoint (~2 minutes)
+6. **Configure Creatio** - Set up and test the connection in Creatio (~3 minutes)
 
 ---
 
@@ -269,9 +270,11 @@ Replace with your actual credentials for accessing `registry.creatio.com`.
 
 ##### Step 2: Configure LLM Provider
 
-Choose one of the following options based on your LLM provider:
+Choose one of the following options based on your LLM provider. **Note:** These are example configurations - you need to replace the placeholder values with your actual parameters.
 
 ###### Option A: OpenAI Configuration
+
+**Example configuration** (replace with your actual values):
 
 ```yaml
 appConfig:
@@ -281,15 +284,17 @@ appConfig:
         openai:
           - name: gpt-4o
             model: gpt-4o
-            api_key: sk-your-openai-api-key
+            api_key: sk-your-openai-api-key  # Replace with your actual OpenAI API key
           - name: text-embedding-3-small
             model: text-embedding-3-small
-            api_key: sk-your-openai-api-key
+            api_key: sk-your-openai-api-key  # Replace with your actual OpenAI API key
       defaultModel: gpt-4o
       embeddingsModel: text-embedding-3-small # Optional
 ```
 
 ###### Option B: Azure Configuration
+
+**Example configuration** (replace with your actual values):
 
 ```yaml
 appConfig:
@@ -298,13 +303,13 @@ appConfig:
       models:
         azure:
           - name: azure-gpt-4o
-            model: gpt-4o-2024-11-20
-            resource_name: your-azure-resource
-            api_key: your-azure-api-key
+            model: gpt-4o-2024-11-20  # Replace with your actual Azure model deployment
+            resource_name: your-azure-resource  # Replace with your actual Azure resource name
+            api_key: your-azure-api-key  # Replace with your actual Azure API key
           - name: azure-text-embedding
-            model: text-embedding-3-small
-            resource_name: your-azure-resource
-            api_key: your-azure-api-key
+            model: text-embedding-3-small  # Replace with your actual Azure embedding model
+            resource_name: your-azure-resource  # Replace with your actual Azure resource name
+            api_key: your-azure-api-key  # Replace with your actual Azure API key
       defaultModel: azure-gpt-4o
       embeddingsModel: azure-text-embedding # Optional
 ```
@@ -370,9 +375,7 @@ helm upgrade --install genai . -f values.onsite.yaml
 
 ---
 
-#### Verify and Configure GenAI in Creatio
-
-##### Step 1: Verify Deployment Status
+#### Verify Deployment Status
 
 Before configuring Creatio, verify that your Kubernetes deployment is running successfully:
 
@@ -386,7 +389,7 @@ kubectl get services
 
 **Expected output:** All pods should be in `Running` status and the service should show the NodePort (default: 30082).
 
-##### Step 2: Determine Service URL
+##### Determine Service URL
 
 Choose the appropriate URL format based on your configuration:
 
@@ -406,33 +409,43 @@ http://genai.example.com
 ```
 (Use the hostname you configured in your ingress settings)
 
-##### Step 3: Configure Creatio System Setting
+##### Test API Endpoint
 
-1. **Log into Creatio** as an administrator
-2. Navigate to **System Settings** (System Designer → System Settings)
-3. **Search** for code: `GenAIServiceUrl`
-4. **Set the value** using the URL determined in Step 2
-5. **Save** the configuration
-
-**Example configurations:**
-- NodePort: `http://192.168.1.100:30082`
-- Ingress: `http://genai.yourdomain.com`
-
-##### Step 4: Test Connection
-
-Verify the GenAI service is working correctly:
-
-###### Test API Endpoint:
+**For NodePort:**
 ```bash
-curl -X GET http://<your-service-url>/health
+curl -X GET http://192.168.1.100:30082/health  # Replace 192.168.1.100 with your actual node IP
+```
+
+**For Ingress:**
+```bash
+curl -X GET http://genai.yourdomain.com/health
 ```
 
 **Expected response:** HTTP 200 with health status information.
 
-###### Test in Creatio:
+---
+
+#### Configure GenAI in Creatio
+
+##### Step 1: Configure System Setting
+
+1. **Log into Creatio** as an administrator
+2. Navigate to **System Settings** (System Designer → System Settings)
+3. **Search** for code: `GenAIServiceUrl`
+4. **Set the value** using the URL determined in the previous section
+5. **Save** the configuration
+
+**Example configurations:**
+- NodePort: `http://192.168.1.100:30082`  # Replace 192.168.1.100 with your actual node IP
+- Ingress: `http://genai.yourdomain.com`  # Replace with your actual domain
+
+##### Step 2: Test Connection in Creatio
+
 1. **Open Creatio AI Chat** feature in your Creatio interface
 2. **Send a test message**: "Hi, how are you?"
 3. **Verify response**: You should receive a response from the AI assistant
+
+**Expected behavior:** The AI should respond appropriately, indicating the GenAI service is working correctly.
 
 ---
 

@@ -106,7 +106,7 @@ postgresql:
         cpu: 500m
     persistence:
       enabled: false
-      size: 50Gi
+      size: 8Gi
   auth:
     username: postgres
     password: postgres
