@@ -15,15 +15,12 @@
      - [Configure GenAI Functionality in Creatio](#configure-genai-functionality-in-creatio)  
      - [Notes](#notes)
    - [Install via Kubernetes](#install-via-kubernetes)
+     - [Deployment Overview](#deployment-overview)
      - [Prerequisites](#prerequisites)
      - [Download Helm Files](#download-helm-files)
-     - [Configuration: `values.onsite.yaml`](#configuration-valuesonsiteyaml)
-       - [OpenAI Model Configuration](#openai-model-configuration)
-       - [Azure Model Configuration](#azure-model-configuration)
-       - [Default Model Configuration](#default-model-configuration)
-       - [Docker Registry Credentials](#docker-registry-credentials)
-       - [Ingress Configuration](#ingress-configuration)
+     - [Step-by-Step Configuration Guide](#step-by-step-configuration-guide)
      - [Deploy with Helm](#deploy-with-helm)
+     - [Verify Deployment Status](#verify-deployment-status)
      - [Configure GenAI in Creatio](#configure-genai-in-creatio)
 
 ---
@@ -46,7 +43,6 @@ A service that provides an abstraction layer for **Large Language Model (LLM)** 
 
 ### `postgres`
 A PostgreSQL database used for storing:
-- GenAI configuration data (e.g., prompts)
 - Operational statistics (e.g., request logs)
 
 ## Installation
