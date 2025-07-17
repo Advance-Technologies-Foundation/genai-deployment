@@ -145,11 +145,9 @@ docker-compose up -d
 
 ## Configure GenAI Functionality in Creatio
 
-1. Open Creatio and go to **System Settings**.
-
-2. Locate the setting named **Account enrichment service url**.
-
-3. Set its value to:
+1. Log into Creatio and go to **System Settings**.
+2. Locate the setting: `Account enrichment service url` (code: `AccountEnrichmentServiceUrl`).
+3. Set its value using the following format:
 
 ```
 http://[your_server_ip_address]:5006
@@ -182,8 +180,7 @@ This guide outlines the steps to deploy the GenAI enrichment service on a Kubern
    - [Docker registry credentials](#docker-registry-credentials)
    - [Ingress Configuration](#ingress-configuration)
 4. [Deploy with Helm](#deploy-with-helm)
-5. [Obtain Ingress Host and NodePort](#obtain-ingress-host-and-nodeport)
-6. [Configure GenAI in Creatio](#configure-genai-in-creatio)
+5. [Configure GenAI in Creatio](#configure-genai-in-creatio)
 
 ---
 
@@ -299,34 +296,14 @@ helm upgrade --install genai . -f values.onsite.yaml --kubeconfig <path-to-your-
 
 ---
 
-## Obtain Ingress Host and NodePort
-
-1. Get the ingress host:
-
-   ```bash
-   kubectl get ingress genai-enrichment
-   ```
-
-   Retrieve the value under the `HOSTS` column.
-
-2. Get the service NodePort:
-
-   ```bash
-   kubectl get svc genai-enrichment
-   ```
-
-   Retrieve the NodePort value under the `PORTS` column.
-
----
-
 ## Configure GenAI in Creatio
 
 1. Log into Creatio and go to **System Settings**.
-2. Locate the setting: `Account enrichment service url`.
+2. Locate the setting: `Account enrichment service url` (code: `AccountEnrichmentServiceUrl`).
 3. Set its value using the following format:
 
    ```
-   http://<ingress-host>:<node-port>
+   http://<your_server_hostname_or_ip>:<node-port>
    ```
 
    Replace `<ingress-host>` and `<node-port>` with the actual values obtained in the previous step.
