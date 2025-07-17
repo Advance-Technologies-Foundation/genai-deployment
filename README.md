@@ -272,9 +272,9 @@ Specify the ingress host by setting the DNS name that points to your Linux serve
 ingress:
   enabled: true
   hosts:
-    - genai-local.com
+    - genai.example.com
 ```
-Replace "genai-local.com" with your DNS name (e.g., testname.com).
+Replace "genai.example.com" with your DNS name.
 
 ---
 
@@ -295,10 +295,10 @@ helm upgrade --install genai . -f values.onsite.yaml --kubeconfig <path-to-your-
 3. Set its value using the following format:
 
    ```
-   http://<your_server_hostname_or_ip>:<node-port>
+   http://<kubernetes_ip_or_hostname>:30082
    ```
 
-   Replace `<ingress-host>` and `<node-port>` with the actual values obtained in the previous step.
+   Replace `<kubernetes_ip_or_hostname>` with your the actual values.
 
 ---
 
