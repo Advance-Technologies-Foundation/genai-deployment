@@ -1,0 +1,38 @@
+{{- if .Values.jaeger.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "enrichment.fullname" . }}-jaeger
+  labels:
+    app: {{ template "enrichment.name" . }}-jaeger
+    chart: {{ template "enrichment.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.jaeger.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "enrichment.fullname" . }}-jaeger
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "enrichment.fullname" . }}-jaeger
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: jaeger
+          image: {{ .Values.jaeger.image.repository }}:{{ .Values.jaeger.image.tag }}
+          env:
+            - name: SPAN_STORAGE_TYPE
+              value: memory
+          ports:
+            - name: ui
+              containerPort: 16686
+              protocol: TCP
+            - name: grpc
+              containerPort: 4317
+              protocol: TCP
+          resources:
+{{ toYaml .Values.jaeger.resources | indent 12 }}
+{{- end }}

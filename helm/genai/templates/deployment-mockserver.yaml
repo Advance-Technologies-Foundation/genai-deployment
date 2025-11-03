@@ -1,0 +1,71 @@
+{{- if .Values.mockserver.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mockserver
+  labels:
+    app: {{ template "enrichment.name" . }}
+    chart: {{ template "enrichment.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.mockserver.replicaCount }}
+  selector:
+    matchLabels:
+      app: mockserver
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      name: mockserver
+      labels:
+        app: mockserver
+        release: {{ .Release.Name }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/mockserver/metrics"
+        prometheus.io/port: {{ .Values.mockserver.service.port | quote }}
+    spec:
+      containers:
+        - name: mockserver
+          image: "{{ .Values.mockserver.image.repository }}:{{ .Values.mockserver.image.tag }}"
+          imagePullPolicy: {{ .Values.commonImagesConfig.pullPolicy }}
+          securityContext:
+            runAsUser: 65534 # nonroot
+            readOnlyRootFilesystem: false
+          ports:
+            - name: http
+              containerPort: 1080
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 200m
+              memory: 1Gi
+            limits:
+              cpu: 400m
+              memory: 2Gi
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 2
+            successThreshold: 1
+            failureThreshold: 10
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 10
+          env:
+            - name: LOG_LEVEL
+              value: "ERROR"
+            - name: SERVER_PORT
+              value: "1080"
+            - name: MOCKSERVER_METRICS_ENABLED
+              value: "true"
+            - name: MOCKSERVER_MAX_EXPECTATIONS
+              value: "1000"
+            - name: MOCKSERVER_MAX_LOG_ENTRIES
+              value: "3000"
+{{- end }}

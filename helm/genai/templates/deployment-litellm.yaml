@@ -1,0 +1,107 @@
+{{- if .Values.litellm.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "enrichment.fullname" . }}-litellm
+  labels:
+    app: {{ template "enrichment.name" . }}-litellm
+    chart: {{ template "enrichment.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.litellm.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "enrichment.fullname" . }}-litellm
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      name: {{ include "enrichment.fullname" . }}-litellm
+      labels:
+        app: {{ include "enrichment.fullname" . }}-litellm
+        release: {{ .Release.Name }}
+    spec:
+      volumes:
+        - name: litellm-config
+          configMap:
+            name: {{ template "enrichment.fullname" . }}-litellm-config
+            items:
+              - key: config
+                path: config.yaml
+      containers:
+        - name: litellm-container
+          image: "{{ .Values.litellm.image.repository }}:{{ .Values.litellm.image.tag }}"
+          imagePullPolicy: {{ .Values.commonImagesConfig.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 4000
+              protocol: TCP
+          env:
+            - name: DATABASE_URL
+              value: "postgres://{{ .Values.appConfig.db.user }}:{{ .Values.appConfig.db.password }}@{{ .Values.appConfig.db.host }}:{{ .Values.appConfig.db.port }}/{{ .Values.appConfig.db.database }}?currentSchema={{ .Values.litellm.dbSchema }}"
+            - name: PROXY_MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secret-litellm
+                  key: masterkey
+            {{- range .Values.appConfig.genAI.llmProviders.models.openai }}
+            - name: OPENAI_API_KEY_{{ .name | upper }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ printf "%s-secret-%s" $.Release.Name .name | lower | quote }}
+                  key: apiKey
+            {{- end }}
+            {{- range .Values.appConfig.genAI.llmProviders.models.azure }}
+            - name: AZURE_API_KEY_{{ .name | upper }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ printf "%s-secret-%s" $.Release.Name .name | lower | quote }}
+                  key: apiKey
+            {{- end }}
+            {{- range .Values.appConfig.genAI.llmProviders.models.bedrock }}
+            - name: AWS_SECRET_ACCESS_KEY_{{ .name | upper }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ printf "%s-secret-%s" $.Release.Name .name | lower | quote }}
+                  key: aws_secret_access_key
+            - name: AWS_ACCESS_KEY_ID_{{ .name | upper }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ printf "%s-secret-%s" $.Release.Name .name | lower | quote }}
+                  key: aws_access_key_id
+            {{- end }}
+            {{- if .Values.jaeger.enabled }}
+            - name: OTEL_EXPORTER_OTLP_HEADERS
+              value: "api-key=null"
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: "grpc"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: {{ include "jaeger.otel.endpoint" . }}
+            {{- end }}
+          args:
+            - --config
+            - /etc/litellm/config.yaml
+          volumeMounts:
+            - name: litellm-config
+              mountPath: /etc/litellm/
+          resources:
+            {{ toYaml .Values.litellm.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health/liveliness
+              port: 4000
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            successThreshold: 1
+            failureThreshold: 3
+            timeoutSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health/readiness
+              port: 4000
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            successThreshold: 1
+            failureThreshold: 3
+            timeoutSeconds: 10
+{{- end }}
