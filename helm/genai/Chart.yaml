@@ -1,10 +1,10 @@
 apiVersion: v2
 description: A Helm chart for Enrichment Service
 name: enrichment
-version: 1.0.663
+version: 2.1.0
 dependencies:
   - name: redis
-    version: "21.1.11"
+    version: "24.0.8"
     condition: redis.enabled
     repository: "https://charts.bitnami.com/bitnami"
   - name: postgresql

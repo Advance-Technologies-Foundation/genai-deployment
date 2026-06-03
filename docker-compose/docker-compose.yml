@@ -1,40 +1,86 @@
 networks:
   enrichment:
     driver: bridge
+
 volumes:
   postgres:
     driver: local
+  redis:
+    driver: local
 
 services:
-  enrichment:
-    image: registry.creatio.com/enrichment-service:${TAG}
-    ports:
-      - 5006:8080
-    dns_search: ${INTERNAL_DOMAIN}
-    deploy:
-      restart_policy:
-        condition: on-failure
+  postgres:
+    container_name: enrichment-postgres
+    image: registry.creatio.com/enrichment-postgresql:${TAG:-2.0.439}
     environment:
-      - "ConnectionStrings__Db=Host=${POSTGRES_HOST:-enrichment-postgres};Port=${POSTGRES_PORT:-5432};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres};Database=${POSTGRES_DB:-postgres};SearchPath=${POSTGRES_SEARCHPATH:-enrichment};"
-      - "GenAI__CustomDomain=http://litellm:4000"
-      - "GenAI__ProviderType=${GenAI__ProviderType:--1}"    
-      - "GenAI__DefaultModel=${GenAI__DefaultModel}"
-      - "GenAI__EmbeddingsModel=${GenAI__EmbeddingsModel}"
-      - "GenAI__AzureResourceName=${AZURE_RESOURCENAME}"
-      - "GenAI__AzureDeploymentId=${AZURE_DEPLOYMENTID}"
-    env_file:
-      - .env
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-enrichment}
+      POSTGRES_SCHEMAS: ${POSTGRES_SCHEMAS:-enrichment,subscription,litellm}
+      PGDATA: /var/lib/postgresql/data
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-enrichment}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    networks:
+      - enrichment
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
+
+  redis:
+    container_name: enrichment-redis
+    image: registry.creatio.com/enrichment-redis:${TAG:-2.0.439}
+    restart: always
+    command:
+      - --appendonly
+      - "yes"
+      - --requirepass
+      - ${REDIS_PASSWORD}
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - redis:/data
+    networks:
+      - enrichment
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "5"
+
+  litellm:
+    image: registry.creatio.com/litellm-patched:${TAG:-2.0.439}
+    restart: always
+    volumes:
+      - ./etc/litellm-config.yaml:/app/config.yaml:ro # Mount the local configuration file as read-only
+    environment:
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@enrichment-postgres:5432/${POSTGRES_DB:-enrichment}?schema=litellm"
+      STORE_MODEL_IN_DB: "True" # allows adding models to proxy via UI
+      PROXY_MASTER_KEY: ${PROXY_MASTER_KEY}
     depends_on:
       postgres:
         condition: service_healthy
       flyway:
-        condition: service_started
-      litellm:
-        condition: service_healthy
-    volumes:
-      - ./logs:/app/Log
-      - ./etc/appsettings.json:/app/appsettings.json
-      - ./etc/log4net.config:/app/log4net.config
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    command: [ "--config", "/app/config.yaml", "--port", "4000", "--num_workers", "2" ]
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import socket; s = socket.socket(); s.settimeout(2); s.connect(('localhost', 4000)); s.close()\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
     networks:
       - enrichment
     logging:
@@ -44,38 +90,25 @@ services:
         max-file: "5"
 
   flyway:
-    image: registry.creatio.com/enrichment-flyway:${TAG}
+    image: registry.creatio.com/enrichment-flyway:${TAG:-2.0.439}
     dns_search: ${INTERNAL_DOMAIN}
     deploy:
       restart_policy:
         condition: on-failure
-    command: -url=jdbc:postgresql://${POSTGRES_HOST:-enrichment-postgres}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-postgres} -schemas=${POSTGRES_SEARCHPATH:-enrichment} -user=${POSTGRES_USER:-postgres} -password=${POSTGRES_PASSWORD:-postgres} migrate
+    command:
+      - -url=jdbc:postgresql://enrichment-postgres:5432/${POSTGRES_DB:-enrichment}
+      - -schemas=enrichment,subscription,litellm
+      - -user=${POSTGRES_USER:-postgres}
+      - -password=${POSTGRES_PASSWORD}
+      - migrate
     environment:
       - FLYWAY_CREATE_SCHEMAS=true
       - FLYWAY_CONNECT_RETRIES=1
       - FLYWAY_BASELINE_ON_MIGRATE=true
       - FLYWAY_VALIDATE_ON_MIGRATE=false
-    networks:
-      - enrichment
     depends_on:
       postgres:
         condition: service_healthy
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "5m"
-        max-file: "5"
-
-  postgres:
-    container_name: enrichment-postgres
-    image: postgres:15
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      PGDATA: /data/postgres
-    restart: unless-stopped
-    volumes:
-      - postgres:/data/postgres
     networks:
       - enrichment
     logging:
@@ -83,26 +116,115 @@ services:
       options:
         max-size: "5m"
         max-file: "5"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
 
-
-  litellm:
-    image: ghcr.io/berriai/litellm:${LITELLM_VERSION:-main-v1.72.6-stable}
-    volumes:
-      - ./etc/litellm-config.yaml:/app/config.yaml # Mount the local configuration file
+  enrichment:
+    image: registry.creatio.com/enrichment-service:${TAG:-2.0.439}
+    restart: always
+    ports:
+      - ${ENRICHMENT_PORT:-5006}:8080
+    dns_search: ${INTERNAL_DOMAIN}
     environment:
-        DATABASE_URL: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@${POSTGRES_HOST:-enrichment-postgres}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-postgres}"
-        STORE_MODEL_IN_DB: "True" # allows adding models to proxy via UI
-    depends_on:
-      postgres:
-        condition: service_healthy
+      # Database Configuration
+      - "ConnectionStrings__Db=Host=${POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Database=${POSTGRES_DB};SearchPath=${POSTGRES_SEARCHPATH};"
+
+      # Redis Configuration
+      - "Redis__Enabled=${REDIS_ENABLED:-true}"
+      - "Redis__Host=${REDIS_HOST:-enrichment-redis}:${REDIS_PORT:-6379},password=${REDIS_PASSWORD:-redis-password},defaultDatabase=10,abortConnect=false"
+
+      # GenAI Configuration
+      - "GenAI__OpenAIApiKey=${PROXY_MASTER_KEY}"
+      - "GenAI__CustomDomain=http://litellm:4000"
+      - "GenAI__LLMProviders__Type=${GenAI__ProviderType:-custom}"
+      - "GenAI__LLMProviders__DefaultModel=${GenAI__DefaultModel:-gpt-5.2}"
+      - "GenAI__LLMProviders__EmbeddingsModel=${GenAI__EmbeddingsModel:-text-embedding-3-large}"
+
+      # Authentication Configuration (disabled for onsite)
+      - "ENRICHMENT_AuthenticationOptions__UseOAuth=false"
+      - "ENRICHMENT_AuthenticationOptions__UseApiKey=false"
+      - "ENRICHMENT_AuthenticationOptions__IdentityProviderUrl=http://localhost"
+
+      # Knit Engine Configuration
+      - "KnitEngine__Spacy__Url=http://spacy:5000"
+      - "KnitEngine__Spacy__TimeoutSec=15"
+
+      # Subscription Tracking (onsite local mode)
+      - "SubscriptionTrackingOptions__BaseUrl=http://subscription-tracking:8080"
+
+      # Creatio License Key
+      - "ENRICHMENT_CreatioLicenseKey=${CREATIO_LICENSE_KEY}"
+
+      # Application Settings
+      - "TraceDebugInfo=${TRACE_DEBUG_INFO:-false}"
+      - "LogLevel=${LOG_LEVEL:-ERROR}"
+      - "MinThreads=${MIN_THREADS:-1000}"
+
+      # Usage Limits
+      - "GenAI__MaxRequestsPerHour=${MAX_REQUESTS_PER_HOUR:--1}"
+      - "GenAI__MaxRequestsPerDay=${MAX_REQUESTS_PER_DAY:--1}"
+      - "GenAI__MaxRequestsPerMonth=${MAX_REQUESTS_PER_MONTH:--1}"
+      - "GenAI__MaxTokensPerMonth=${MAX_TOKENS_PER_MONTH:--1}"
+      - "GenAI__MaxTokensPerDay=${MAX_TOKENS_PER_DAY:--1}"
+      - "GenAI__MaxTokensPerHour=${MAX_TOKENS_PER_HOUR:--1}"
+      - "GenAI__MaxTokensPerMinute=${MAX_TOKENS_PER_MINUTE:--1}"
+      - "GenAI__MaxTotalTokens=${MAX_TOTAL_TOKENS:--1}"
+      - "GenAI__StoreSensitiveFieldsInStats=false"
     env_file:
       - .env
-    command: [ "--config", "/app/config.yaml", "--port", "4000", "--num_workers", "8" ]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      flyway:
+        condition: service_completed_successfully
+      litellm:
+        condition: service_healthy
+      subscription-tracking:
+        condition: service_healthy
+      spacy:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/readiness"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    volumes:
+      - ./etc/appsettings.json:/app/appsettings.json:ro
+      - ./etc/log4net.config:/app/log4net.config:ro
+    networks:
+      - enrichment
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
+    security_opt:
+      - no-new-privileges:true
+
+  subscription-tracking:
+    image: registry.creatio.com/subscription-tracking-service:${TAG:-2.0.439}
+    restart: always
+    environment:
+      - "ConnectionStrings__Db=Host=${POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Database=${POSTGRES_DB};SearchPath=subscription;"
+      - "Redis__ConnectionString=${REDIS_HOST:-enrichment-redis}:${REDIS_PORT:-6379},password=${REDIS_PASSWORD:-redis-password},defaultDatabase=7,abortConnect=false"
+      - "SubscriptionLimitsOptions__Enabled=false"
+      - "CreatioLicenseKey=${CREATIO_LICENSE_KEY}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      flyway:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/readiness"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+    volumes:
+      - ./etc/subscription-tracking-log4net.config:/app/log4net.config:ro
     networks:
       - enrichment
     logging:
@@ -110,10 +232,25 @@ services:
       options:
         max-size: "5m"
         max-file: "5"
+    security_opt:
+      - no-new-privileges:true
+
+  spacy:
+    image: registry.creatio.com/spacy-ner:${TAG:-2.0.439}
+    restart: always
+    dns_search: ${INTERNAL_DOMAIN}
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:4000/health/readiness || exit 1"]
-      interval: 30s
-      timeout: 10s
+      test: ["CMD-SHELL", "python -c \"import socket; s = socket.socket(); s.settimeout(2); s.connect(('localhost', 5000)); s.close()\" || exit 1"]
+      interval: 10s
+      timeout: 5s
       retries: 3
-
-
+      start_period: 30s
+    networks:
+      - enrichment
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "5"
+    security_opt:
+      - no-new-privileges:true

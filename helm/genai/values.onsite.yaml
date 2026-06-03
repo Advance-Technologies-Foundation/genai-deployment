@@ -23,32 +23,38 @@ env:
     value: "false"
   - name: ENRICHMENT_AuthenticationOptions__IdentityProviderUrl
     value: "http://localhost"
+  - name: ENRICHMENT_AuthenticationOptions__ClientId
+    value: "onsite-client"
 
 appConfig:
   db:
-    host: postgresql-genai
+    host: postgresql-enrichment
     port: 5432
     user: postgres
-    password: postgres
-    database: genai
-    schema: genai
+    password: "postgres-password"
+    database: enrichment
+    schema: enrichment
   genAI:
     llmProviders:
-      defaultModel: gpt-4o
-#      embeddingsModel: text-embedding-3-large
+      defaultModel: gpt-5.2
+      embeddingsModel: text-embedding-3-large
       models:
         openai:
-          - name: gpt-4o
-            model: gpt-4o
-            api_key: <your_openai_api_key>
-#          - name: text-embedding-3-large
+          gpt-5.2:
+            model: gpt-5.2
+            api_key: "<openai_api_key>"
+          text-embedding-3-large:
+            model: text-embedding-3-large
+            api_key: "<openai_api_key>"
+        azure: {}
+#          azure-gpt-5.2:
+#            model: <your-model-name>
+#            resource_name: <your-azure-resource-name>
+#            api_key: <your-azure-api-key>
+#          azure-text-embedding-3-large:
 #            model: text-embedding-3-large
-#            api_key: <your_openai_api_key>
-        # azure:
-        #   - name: <put the name>
-        #     model: <put the model model>
-        #     resource_name: <put the resource's name>
-        #     api_key: <put api key>
+#            resource_name: <your-azure-resource-name>
+#            api_key: <your-azure-api_key>
 
     maxRequestsPerHour: -1
     maxRequestsPerDay: -1
@@ -57,23 +63,41 @@ appConfig:
     maxTokensPerDay: -1
     maxTokensPerHour: -1
     maxTokensPerMinute: -1
-    maxTotalTokens: -1
+    maxTotalTokens: 0
     storeSensitiveFieldsInStats: false
   traceDebugInfo: false
   logLevel: "ERROR"
   minThreads: 1000
   redis:
+    enabled: true
+    host: "enrichment-redis-master:6379,password=redis-password,defaultDatabase=10,abortConnect=false"
+
+redis:
+  auth:
+    enabled: true
+    password: "redis-password"
+  # volumePermissions disabled: os-shell image is not available in internal registries.
+  volumePermissions:
     enabled: false
+  master:
+    persistence:
+      enabled: true
+      size: 8Gi
+      storageClass: ""  # Use default storage class
+
+subscriptionTracking:
+  limitsSourceMode: local
 
 usageLimitsRetriever:
-  enabled: false
+  env:
+    totalTokensLimitId: AAE5F33A-C7AB-4099-A9F7-FB03CC89C271
+    totalActionsLimitId: 88c9245f-349e-4d01-8a35-ae3a09028503
 
 service:
   type: NodePort
   nodePort: 30082
 
 ingress:
-  enabled: false
   className: nginx
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: "/"
@@ -81,15 +105,34 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-read-timeout: '480'
     nginx.ingress.kubernetes.io/proxy-send-timeout: '480'
   hosts:
-    - genai.example.com
+    - enrichment.example.com
 
 spacy:
-  enabled: false
+  service:
+    type: ClusterIP
+    port: 5000
+  resources:
+    limits:
+      cpu: 1500m
+      memory: 2000Mi
+    requests:
+      cpu: 800m
+      memory: 1000Mi
 
 postgresql:
-  enabled: true
-  fullnameOverride: postgresql-genai
+  fullnameOverride: postgresql-enrichment
+  postgresqlDataDir: /opt/bitnami/postgresql/data
+  # volumePermissions disabled: os-shell image is not available in internal registries.
+  volumePermissions:
+    enabled: false
   primary:
+    extraEnvVars: []
+    containerSecurityContext:
+      enabled: true
+      runAsUser: 1001
+      runAsGroup: 1001
+      runAsNonRoot: true
+      readOnlyRootFilesystem: false
     resources:
       requests:
         memory: 128Mi
@@ -98,24 +141,17 @@ postgresql:
         memory: 1024Mi
         cpu: 500m
     persistence:
-      enabled: false
+      enabled: true
       size: 8Gi
+      mountPath: /opt/bitnami/postgresql
   auth:
     username: postgres
-    password: postgres
-    database: genai
+    password: "postgres-password"
+    database: enrichment
     forcePassword: true
 
 litellm:
-  enabled: true
   resources:
-    requests:
-      memory: 512Mi
-      cpu: 500m
     limits:
       memory: 3096Mi
       cpu: 1000m
-  #fallbacks:
-      #<put fall back models>
-      #- azure-gpt-4o-2024-05-13: []
-      #- openai-gpt-4o: []

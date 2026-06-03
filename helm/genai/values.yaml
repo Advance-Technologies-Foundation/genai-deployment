@@ -1,5 +1,167 @@
-replicaCount: 5
+# =============================================================================
+# Global Configuration
+# =============================================================================
+replicaCount: 2
 
+# Vault integration configuration
+vault:
+  # Vault Agent Injector (Sidecar approach) - Priority method
+  # Secrets are injected into Pod memory (tmpfs) at /vault/secrets/
+  # See: https://developer.hashicorp.com/vault/tutorials/kubernetes/kubernetes-sidecar
+  agentInjector:
+    enabled: false
+    # Vault server address. Defaults to HTTPS; ensure TLS is properly configured for production.
+    # For TLS verification, configure vault.hashicorp.com/tls-secret or vault.hashicorp.com/ca-cert pod annotations,
+    # or see https://developer.hashicorp.com/vault/docs/platform/k8s/injector/annotations for all TLS options.
+    address: "https://vault.vault.svc.cluster.local:8200"
+    secretPath: "secret/data/enrichment"
+    # Vault Kubernetes auth role. Required when vault.agentInjector.enabled is true.
+    role: ""
+    # Optional custom Vault Agent template.
+    # Leave empty to use the chart default template for the active profile.
+    # WARNING: The rendered output of this template is sourced as a shell script.
+    # Any line that is not a plain `export VAR='value'` statement will execute as shell
+    # code with the pod's identity. Treat this field with the same access controls
+    # as the container image or RBAC role.
+    # NOTE: When set, this template is used for ALL workloads (app, subscriptionTracking,
+    # litellm, and flyway). The Flyway job requires FLYWAY_URL, FLYWAY_USER, and
+    # FLYWAY_PASSWORD to be exported; ensure your custom template covers all workloads
+    # that are enabled, or Flyway will silently receive the wrong environment variables.
+    template: ""
+    wrapperImage:
+      repository: "registry.creatio.com/busybox"
+      tag: "1.37.0-musl"
+    wrapperResources:
+      requests:
+        cpu: "10m"
+        memory: "16Mi"
+      limits:
+        cpu: "50m"
+        memory: "32Mi"
+    # Additional annotations to add to pods
+    annotations:
+      # agent-pre-populate-only: "true" means only the init container runs; the Vault sidecar
+      # is NOT injected, so secrets are written once at pod start and never renewed automatically.
+      # NOTE: Env vars are sourced from /vault/secrets/config at startup only. Setting this to
+      # "false" enables the renewal sidecar (keeps the on-disk file fresh) but does NOT update
+      # running process env vars — a pod restart is still required after secret rotation.
+      # Set to "false" only if paired with an external rotation + rolling-restart controller.
+      vault.hashicorp.com/agent-pre-populate-only: "true"
+      # Resource caps for the Vault Agent container (applies to both the init container in
+      # pre-populate-only mode and the renewal sidecar when agent-pre-populate-only is "false").
+      # Keep these lines active to prevent the Vault Agent from running uncapped.
+      vault.hashicorp.com/agent-limits-cpu: "250m"
+      vault.hashicorp.com/agent-limits-mem: "128Mi"
+      vault.hashicorp.com/agent-requests-cpu: "50m"
+      vault.hashicorp.com/agent-requests-mem: "64Mi"
+
+  # Vault CSI Driver (Secrets Store CSI Driver)
+  # Secrets are mounted as files via CSI interface
+  # See: https://developer.hashicorp.com/vault/tutorials/kubernetes/kubernetes-secret-store-driver
+  csi:
+    enabled: false
+    # Vault provider name
+    provider: "vault"
+    # Vault server address. Defaults to HTTPS; ensure TLS is properly configured for production.
+    # For TLS verification, configure the csi.vault.hashicorp.com/tls-cacert-secret annotation on the
+    # SecretProviderClass, or see https://developer.hashicorp.com/vault/docs/platform/k8s/csi for all TLS options.
+    address: "https://vault.vault.svc.cluster.local:8200"
+    # Vault Kubernetes auth role. Required when vault.csi.enabled is true.
+    role: ""
+    # Useful when a profile stores all required keys under one dedicated Vault path.
+    secretPath: "secret/data/enrichment"
+    # Volume mount path for secrets
+    mountPath: "/mnt/secrets-store"
+    # Secret objects to sync. The chart filters this list by enabled features.
+    secretObjects:
+      - secretName: ""
+        type: "Opaque"
+        data:
+          - key: "dbConnectionString"
+            objectName: "dbConnectionString"
+          - key: "flywayJdbcUrl"
+            objectName: "flywayJdbcUrl"
+          - key: "flywayUser"
+            objectName: "flywayUser"
+          - key: "flywayPassword"
+            objectName: "flywayPassword"
+          - key: "redisConnectionString"
+            objectName: "redisConnectionString"
+          - key: "openAIApiKey"
+            objectName: "openAIApiKey"
+          - key: "azureDeploymentId"
+            objectName: "azureDeploymentId"
+          - key: "azureResourceName"
+            objectName: "azureResourceName"
+          - key: "usageLimitsClientId"
+            objectName: "usageLimitsClientId"
+          - key: "usageLimitsClientSecret"
+            objectName: "usageLimitsClientSecret"
+          - key: "subscriptionTrackingRedisConnectionString"
+            objectName: "subscriptionTrackingRedisConnectionString"
+          - key: "subscriptionTrackingClientId"
+            objectName: "subscriptionTrackingClientId"
+          - key: "subscriptionTrackingClientSecret"
+            objectName: "subscriptionTrackingClientSecret"
+          - key: "databaseUrl"
+            objectName: "databaseUrl"
+          - key: "masterkey"
+            objectName: "masterkey"
+    # Vault secrets to fetch. The chart filters this list by enabled features.
+    parameters:
+      - secretPath: "secret/data/enrichment"
+        objectName: "dbConnectionString"
+        objectAlias: "dbConnectionString"
+      - secretPath: "secret/data/enrichment"
+        objectName: "flywayJdbcUrl"
+        objectAlias: "flywayJdbcUrl"
+      - secretPath: "secret/data/enrichment"
+        objectName: "flywayUser"
+        objectAlias: "flywayUser"
+      - secretPath: "secret/data/enrichment"
+        objectName: "flywayPassword"
+        objectAlias: "flywayPassword"
+      - secretPath: "secret/data/enrichment"
+        objectName: "redisConnectionString"
+        objectAlias: "redisConnectionString"
+      - secretPath: "secret/data/enrichment"
+        objectName: "openAIApiKey"
+        objectAlias: "openAIApiKey"
+      - secretPath: "secret/data/enrichment"
+        objectName: "azureDeploymentId"
+        objectAlias: "azureDeploymentId"
+      - secretPath: "secret/data/enrichment"
+        objectName: "azureResourceName"
+        objectAlias: "azureResourceName"
+      - secretPath: "secret/data/enrichment"
+        objectName: "usageLimitsClientId"
+        objectAlias: "usageLimitsClientId"
+      - secretPath: "secret/data/enrichment"
+        objectName: "usageLimitsClientSecret"
+        objectAlias: "usageLimitsClientSecret"
+      - secretPath: "secret/data/enrichment"
+        objectName: "subscriptionTrackingRedisConnectionString"
+        objectAlias: "subscriptionTrackingRedisConnectionString"
+      - secretPath: "secret/data/enrichment"
+        objectName: "subscriptionTrackingClientId"
+        objectAlias: "subscriptionTrackingClientId"
+      - secretPath: "secret/data/enrichment"
+        objectName: "subscriptionTrackingClientSecret"
+        objectAlias: "subscriptionTrackingClientSecret"
+      - secretPath: "secret/data/enrichment"
+        objectName: "databaseUrl"
+        objectAlias: "databaseUrl"
+      - secretPath: "secret/data/enrichment"
+        objectName: "masterkey"
+        objectAlias: "masterkey"
+
+global:
+  security:
+    allowInsecureImages: true  # Required for Chainguard images with Bitnami charts
+
+# =============================================================================
+# Docker Registry Configuration
+# =============================================================================
 dockerRegistry:
   enabled: false
   secretName: registry-creatio-secret
@@ -15,73 +177,147 @@ commonImagesConfig:
   imagePullSecrets:
     - name: registry-creatio-secret
 
+# =============================================================================
+# Service Images
+# =============================================================================
 enrichmentServiceImage:
   repository: registry.creatio.com/enrichment-service
-  tag: 1.0.663
+  tag: 2.0.439
 
 spacyNerImage:
   repository: registry.creatio.com/spacy-ner
-  tag: 1.0.663
+  tag: 2.0.439
 
 flywayImage:
   repository: registry.creatio.com/enrichment-flyway
-  tag: 1.0.663
+  tag: 2.0.439
 
+subscriptionTrackingImage:
+  repository: registry.creatio.com/subscription-tracking-service
+  tag: 2.0.439
+
+# =============================================================================
+# Application Configuration
+# =============================================================================
 appConfig:
-  redis:
-    enabled: false
-    host: "<redis-host-address>"
+  # Database Configuration
   db:
-      host: postgres
-      port: 5432
-      user: <your-postgres-user>
-      password: <your-postgres-password>
-      database: genai
-      schema: genai
+    host: enrichment-postgresql
+    port: 5432
+    user: postgres
+    password: "postgres-password"
+    database: enrichment
+    schema: enrichment,subscription
+    existingSecret: ""
+    # Override key names only when your Secret uses custom keys.
+    existingSecretKeys:
+      connectionString: "dbConnectionString"
+      # Flyway key overrides. All three must be set when existingSecret is used;
+      # omitting them when existingSecret is set will fail validation.
+      flywayJdbcUrl: ""
+      user: ""
+      password: ""
+      # Optional key for LiteLLM DATABASE_URL when LiteLLM should reuse the external DB Secret.
+      litellmDatabaseUrl: ""
+
+  # Redis Configuration
+  redis:
+    enabled: true
+    # Full StackExchange.Redis connection string, including port, password and options.
+    # Example: "redis-master:6379,password=secret,defaultDatabase=10,abortConnect=false"
+    # This field is named "host" for legacy reasons but must contain the complete DSN.
+    host: "enrichment-redis-master:6379,password=redis-password,defaultDatabase=10,abortConnect=false"
+    existingSecret: ""
+    # Override key names only when your Secret uses custom keys.
+    existingSecretKeys:
+      connectionString: "redisConnectionString"
+
+  # External Services
   accountManagementBaseServiceUrl: "http://185.99.10.125:8080"
+
+  # Knit Engine Configuration
   knitEngine:
     spacy:
       timeoutSec: 15
-  genAI:
-    llmProviders:
-      type: custom # custom, default, openai, azure
-      defaultModel: "openai-gpt-4o"
-      embeddingsModel: "openai-text-embedding-3-large"
-      models:
-        openai:
-          - name: openai-gpt-4o
-            model: gpt-4o
-            api_key: <openai_api_key>
-          - name: openai-text-embedding-3-large
-            model: text-embedding-3-large
-            api_key: <openai_api_key>
-        azure: []
-#          - name: azure-gpt-4o
-#            model: <your-model-name>
-#            resource_name: <your-azure-resource-name>
-#            api_key: <your-azure-api-key>
-#          - name: azure-text-embedding-3-large
-#            model: text-embedding-3-large
-#            resource_name: <your-azure-resource-name>
-#            api_key: <your-azure-api-key>
-        bedrock: []
-#          - name: claude-3-5-haiku
-#            model: us.anthropic.claude-3-5-haiku-20241022-v1:0
-#            aws_region_name: <aws_region_name>
-#            aws_secret_access_key: <aws_secret_access_key>
-#            aws_access_key_id: <aws_access_key_id>
 
+  # GenAI Configuration
+  genAI:
+    existingSecret: ""
+    # Override key names only when your Secret uses custom keys.
+    existingSecretKeys:
+      openAIApiKey: "openAIApiKey"
+      azureDeploymentId: "azureDeploymentId"
+      azureResourceName: "azureResourceName"
+    # LLM Providers Configuration
+    llmProviders:
+      type: custom  # Options: custom, default, openai, azure
+      defaultModel: gpt-4.1
+      embeddingsModel: openai-text-embedding-3-large
+
+      # Provider-specific model configurations
+      models:
+        # OpenAI Models
+        # Uncomment and configure as needed:
+        openai: {}
+        #   openai-gpt-4o:
+        #     model: gpt-4o
+        #     api_key: <openai_api_key>
+        #   openai-text-embedding-3-large:
+        #     model: text-embedding-3-large
+        #     api_key: <openai_api_key>
+
+        # Azure Models
+        # Uncomment and configure as needed:
+        azure: {}
+        #   azure-gpt-4o:
+        #     model: <your-model-name>
+        #     resource_name: <your-azure-resource-name>
+        #     api_key: <your-azure-api-key>
+        #   azure-text-embedding-3-large:
+        #     model: text-embedding-3-large
+        #     resource_name: <your-azure-resource-name>
+        #     api_key: <your-azure-api_key>
+
+        # AWS Bedrock Models
+        # Uncomment and configure as needed:
+        bedrock: {}
+        #   claude-3-5-haiku:
+        #     model: us.anthropic.claude-3-5-haiku-20241022-v1:0
+        #     aws_region_name: <aws_region_name>
+        #     aws_secret_access_key: <aws_secret_access_key>
+        #     aws_access_key_id: <aws_access_key_id>
+
+        # xAI Models
+        # Uncomment and configure as needed:
+        xai: {}
+        #   grok-4.20-reasoning-creatio:
+        #     model: grok-4.20-reasoning
+        #     api_base: https://api.x.ai/v1
+        #     api_key: <xai_api_key>
+        #     access_group: creatio
+
+    # Custom LiteLLM Domain
     customDomain: ""
+
+    # AI Prompts
     genEntitiesPrompt: >-
       You are a bot that responds strictly with JSON data structures. Requests to you will contain description of the application. In your answer you should provide JSON data structure of that application. Your response must contain only JSON and no other text, description or annotation. Your response must strictly follow RFC 8259 standard. The response must be an array of JSON objects. Each object must represent a single table and have next required attributes: 'table_name', 'caption', 'columns', 'isMain' and optional attribute 'details'. Each object contains columns and you should provide as many columns as you can. Columns object must contain nested keys that are field names, when values are nested objects that contain type with key type, caption of column that is meaningful to a human in English. Available data types are: string, date, datetime, time, integer, float or an object that specifies foreign key to another lookup table. That foreign key specification must contain reference table name with key reference_table. If column represents e-mail of telephone number please provide boolean attributes 'isEmail' or 'isPhone' indicating this respectively. Also object can contain array-type property named Details that contains other tables with the same structure. That details represent tables with detail information for the main table. Each object must contain caption of table that is meaningful to a human in English. Please provide as many tables and columns as you can. Attribute isMain indicates the object is the main for the application.  My first question - give me database structure for:
+
     genDcmPrompt: >-
       Specify only those stages where you can display an indicator of the current execution stage of the business process of the tasks associated with the application created by description in json format, example `[\"stage1\", \"stage2\", \"stage3\"]`. Stages must be an array of string values. Each element should represent a short title of the process stage for the given application. Stage names should reflect the state at a particular stage of the business process and contain information about the object for the progress bar in order from the beginning to the last stage. Do this for an application created from the following description:
+
     genDataPrompt: >-
       I want you to act as a demo data generator. To generate demo data, focus on the caption attribute. Demo data values should be realistic for production. I will send you an array of objects. You must generate demo data for my request. Your response must have only two demo rows per object. For example my request `[{\"table_name\":\"contacts\",\"columns\":[{\"name\":\"full_name\",\"caption\":\"Full name\",\"type\":\"string\"},{\"name\":\"phone\",\"caption\":\"Mobile phone\",\"type\":\"phone\"},{\"name\":\"city\",\"caption\":\"City name\",\"type\":\"lookup\", \"reference_table_name\": \"cities\", \"reference_column_name\": \"city_name\"}]}, {\"table_name\":\"cities\",\"columns\":[{\"name\":\"city_name\"}]}]` you return `{\"contacts\":[{\"full_name\":\"Jon Week\",\"phone\":\"+38 097 166-55-22\",\"city\": \"Kyiv\"},{\"full_name\":\"Mike Smith\",\"phone\":\"+38 099 355-55-22\",\"city\": \"Lviv\"}], \"cities\":[{\"city_name\":\"Lviv\"},{\"city_name\":\"Kiev\"}]}`. You are a bot that only responds with JSON data structures. Your response must contain only JSON and no other text, description, or annotations. Your response must strictly conform to RFC 8259. My first question is to generate demo data for application with description:
+
     genEntitiesMockRequestQuery: "Mock, please"
-    openAIRetryOnFailureCount: 3
-    openAIRetryIntervalSeconds: 5
+
+    # OpenAI Client Configuration
+    openAIRetryOnFailureCount: 1
+    openAIRetryIntervalSeconds: 1
+    retryOnStructuredOutputValidationError: true
     openAIHttpClientTimeoutSec: 240
+
+    # Usage Limits
     maxRequestsPerHour: -1
     maxRequestsPerDay: -1
     maxRequestsPerMonth: -1
@@ -90,14 +326,29 @@ appConfig:
     maxTokensPerHour: -1
     maxTokensPerMinute: -1
     maxTotalTokens: 1000000
-    totalTokensLimitId: "aae5f33a-c7ab-4099-a9f7-fb03cc89c271"
     maxQueryText: 8000
+
+    # Security
     storeSensitiveFieldsInStats: false
+    useOfficialOpenAISdk: false
     defaultSeed: 42
+
+  # Creatio License Key (JWT string for environment detection).
+  # Option 1: Reference a pre-existing K8s secret (recommended for production):
+  #   kubectl create secret generic creatio-license --from-literal=creatioLicenseKey="eyJhbGci..." -n <namespace>
+  #   Then set: creatioLicenseKeyExistingSecret: "creatio-license"
+  # Option 2: Supply the value at deploy time via --set appConfig.creatioLicenseKey="eyJhbGci..."
+  creatioLicenseKey: ""
+  creatioLicenseKeyExistingSecret: ""  # Name of a pre-existing Secret containing key 'creatioLicenseKey'
+
+  # Application Settings
   traceDebugInfo: false
   logLevel: "DEBUG"
   minThreads: 2000
 
+# =============================================================================
+# Logging Configuration
+# =============================================================================
 grayLog:
   enabled: false
   AMQP:
@@ -109,96 +360,18 @@ grayLog:
     exchange: <graylog-exchange>
     routingKey: <graylog-routing-key>
 
-nameOverride: ""
-fullnameOverride: ""
-
-redis:
-  enabled: false
-
-postgresql:
-  enabled: false
-
+# =============================================================================
+# Kubernetes Service Configuration
+# =============================================================================
 service:
   type: ClusterIP
   port: 8080
+  # Set nodePort only when type=NodePort. Use 0 or omit the field to let Kubernetes auto-assign it.
+  # nodePort: 0
 
-spacy:
-  enabled: true
-  service:
-    type: ClusterIP
-    port: 5000
-    enableIngressEndpoint: false
-  resources:
-    limits:
-      cpu: 1500m
-      memory: 2000Mi
-    requests:
-      cpu: 800m
-      memory: 1000Mi
-
-mockserver:
-  service:
-    type: ClusterIP
-    port: 1080
-  replicaCount: 1
-  enabled: false
-  image:
-    repository: mockserver/mockserver
-    tag: mockserver-5.15.0
-
-litellm:
-  enabled: false
-  replicaCount: 1
-  resources:
-    requests:
-      memory: 512Mi
-      cpu: 500m
-    limits:
-      memory: 8096Mi
-      cpu: 1500m
-  image:
-    repository: ghcr.io/berriai/litellm
-    tag: main-v1.72.6-stable
-  service:
-    type: ClusterIP
-    port: 4000
-  dbSchema: litellm
-  turn_off_message_logging: True
-#  master_key: <sk-maskerkey>
-#  custom_api_key: <sk-customapiKey>
-#  success_callback: ["log_to_console"]
-#  failure_callback: ["log_to_console"]
-#  callbacks: ["log_to_console"]
-#  fallbacks:
-#    - azure-gpt-4o: ["openai-gpt-4o"]
-#    - claude-3-5-haiku: ["openai-gpt-4o"]
-
-usageLimitsRetriever:
-  enabled: true
-  limitsProviderServiceUrl: https://studio.creatio.com
-  clientLimitEndpoint: "0/rest/SubscriptionLimitService/GetEnvironmentLimit"
-  identityServiceTokenUrl: https://studio-is.creatio.com/connect/token
-  clientId: <clientId>
-  clientSecret: <clientSecret>
-  cacheLifetimeSec: 3600
-  requestTimeoutSec: 15
-
-ingress:
-  enabled: false
-  annotations: {}
-#    ingress.class: haproxy
-#    ingress.kubernetes.io/rewrite-target: "/"
-#    ingress.kubernetes.io/ssl-redirect: "false"
-  mockServerPath: /mockserver
-  spacyPath: /spacy
-  path: /
-  hosts:
-    - chart-example.local
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
-
+# =============================================================================
+# Authentication Configuration
+# =============================================================================
 env:
   - name: ENRICHMENT_AuthenticationOptions__UseOAuth
     value: "true"
@@ -210,37 +383,269 @@ env:
     value: "use_enrichment"
   - name: ENRICHMENT_AuthenticationOptions__RequiredIssuer
     value: "creatio.com"
+  - name: ENRICHMENT_AuthenticationOptions__ClientId
+    value: ""
 
+# =============================================================================
+# Usage Limits Retriever Configuration
+# =============================================================================
+usageLimitsRetriever:
+  enabled: true
+  existingSecret: ""
+  # Leave existingSecretKeys empty to use the chart default key names.
+  # Set them only when your existing Secret uses different key names.
+  existingSecretKeys:
+    clientId: ""
+    clientSecret: ""
+  env:
+    totalTokensLimitId: "<your-total-tokens-limit-id>"
+    totalActionsLimitId: "<your-total-actions-limit-id>"
+
+# =============================================================================
+# Subscription Tracking Service
+# =============================================================================
+subscriptionTracking:
+  limitsSourceMode: alm # Options: alm, local
+  replicaCount: 2
+  existingSecret: ""
+  # Leave existingSecretKeys empty to use the chart default key names.
+  # Set them only when your existing Secret uses different key names.
+  existingSecretKeys:
+    redisConnectionString: ""
+    clientId: ""
+    clientSecret: ""
+
+  resources:
+    limits:
+      cpu: 300m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+  service:
+    type: ClusterIP
+    port: 8080
+
+  env:
+    redisConnectionString: "enrichment-redis-master:6379,password=redis-password,defaultDatabase=7,abortConnect=false"
+    limitsProviderServiceUrl: "<your-limits-provider-service-url>"
+    clientLimitEndpoint: "0/rest/SubscriptionLimitService/GetActiveSubscriptionsAsync"
+    identityServiceTokenUrl: "<your-identity-service-token-url>"
+    clientId: "<your-client-id>"
+    clientSecret: "<your-client-secret>"
+    cacheLifetimeSec: 3600
+    requestTimeoutSec: 15
+
+# =============================================================================
+# Ingress Configuration
+# =============================================================================
+ingress:
+  enabled: false
+  annotations: {}
+  #   ingress.class: haproxy
+  #   ingress.kubernetes.io/rewrite-target: "/"
+  #   ingress.kubernetes.io/ssl-redirect: "false"
+
+  mockServerPath: /mockserver
+  spacyPath: /spacy
+  path: /
+
+  hosts:
+    - chart-example.local
+
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+# =============================================================================
+# Chart Name Overrides
+# =============================================================================
+nameOverride: ""
+fullnameOverride: ""
+
+# =============================================================================
+# Infrastructure Dependencies
+# =============================================================================
+
+# Redis Configuration
+redis:
+  enabled: true
+  fullnameOverride: enrichment-redis
+  host: enrichment-redis-master
+
+  auth:
+    enabled: true
+    password: "redis-password"
+    # When set, Bitnami Redis reads its auth password from this Secret instead of
+    # generating its own. Point it at the chart-generated secret so both the app
+    # and the Redis server use the same password.
+    existingSecret: ""
+    # Key name in the existingSecret that contains the Redis password.
+    existingSecretPasswordKey: "redis-password"
+
+  image:
+    registry: registry.creatio.com
+    repository: enrichment-redis
+    tag: 2.0.439
+    pullPolicy: IfNotPresent
+
+  global:
+    imagePullSecrets:
+      - registry-creatio-secret
+
+  commonConfiguration: |-
+    # Redis configuration without module loading
+    # Enable AOF https://redis.io/topics/persistence#append-only-file
+    appendonly yes
+    # Disable RDB persistence, AOF persistence already enabled.
+    save ""
+
+  master:
+    persistence:
+      enabled: false
+    resources:
+      requests:
+        memory: 128Mi
+        cpu: 70m
+      limits:
+        memory: 256Mi
+        cpu: 70m
+
+  replica:
+    replicaCount: 0
+
+# PostgreSQL Configuration (using Bitnami chart with custom image)
+postgresql:
+  enabled: true
+
+  # Use custom PostgreSQL image instead of Bitnami's
+  image:
+    registry: registry.creatio.com
+    repository: enrichment-postgresql
+    tag: 2.0.439
+    pullPolicy: IfNotPresent
+
+  # Global image pull secrets for Bitnami chart
+  global:
+    imagePullSecrets:
+      - registry-creatio-secret
+
+  # Override Bitnami's default PGDATA path to match persistence.mountPath
+  postgresqlDataDir: /opt/bitnami/postgresql/data
+
+  primary:
+    extraEnvVars:
+      - name: POSTGRES_DB
+        value: "enrichment"
+      - name: POSTGRES_SCHEMAS
+        value: "enrichment,subscription,litellm"
+    # Security context to match custom image user (UID 1001)
+    containerSecurityContext:
+      enabled: true
+      runAsUser: 1001
+      runAsGroup: 1001
+      runAsNonRoot: true
+      readOnlyRootFilesystem: false
+    persistence:
+      enabled: false
+      mountPath: /opt/bitnami/postgresql
+      # subPath: data
+    resources:
+      requests:
+        cpu: 1
+        memory: 2048Mi
+      limits:
+        cpu: 1
+        memory: 2048Mi
+
+  auth:
+    username: postgres
+    password: "postgres-password"
+    database: enrichment
+    forcePassword: true
+
+# =============================================================================
+# Service-Specific Configurations
+# =============================================================================
+
+# Spacy NER Service
+spacy:
+  enabled: true
+
+  service:
+    type: ClusterIP
+    port: 5000
+    enableIngressEndpoint: false
+
+  resources:
+    limits:
+      cpu: 1500m
+      memory: 2000Mi
+    requests:
+      cpu: 800m
+      memory: 1000Mi
+
+# LiteLLM Proxy Service
+litellm:
+  enabled: true
+  storeModelInDb: true
+  replicaCount: 1
+  existingSecret: ""
+  # Override key names only when your Secret uses custom keys.
+  existingSecretKeys:
+    databaseUrl: "databaseUrl"
+    masterkey: "masterkey"
+
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 500m
+    limits:
+      memory: 8096Mi
+      cpu: 1500m
+
+  image:
+    repository: registry.creatio.com/litellm-patched
+    tag: 2.0.439
+
+  service:
+    type: ClusterIP
+    port: 4000
+
+  dbSchema: litellm
+  turn_off_message_logging: True
+  # LiteLLM master key. If not set, a random key is generated at install time and preserved across upgrades via Secret
+  # lookup. Set explicitly for stable, predictable deployments and for offline rendering contexts such as
+  # helm template, helm install --dry-run, and GitOps tools (e.g. ArgoCD) that use cluster-less rendering.
+  master_key: ""
+
+  # Optional Configurations
+  # custom_api_key: <sk-customapiKey>
+  # success_callback: ["log_to_console"]
+  # failure_callback: ["log_to_console"]
+  # callbacks: ["log_to_console"]
+  # fallbacks:
+  #   - azure-gpt-4o: ["openai-gpt-4o"]
+  #   - claude-3-5-haiku: ["openai-gpt-4o"]
+
+# Enrichment Service
 enrichment:
   resources:
     limits:
-      cpu: 1000m
-      memory: 2000Mi
+      cpu: 500m
+      memory: 1000Mi
     requests:
       cpu: 200m
       memory: 1000Mi
 
+# Flyway Database Migration
 flyway:
   resources:
     limits:
       cpu: 100m
       memory: 256Mi
-    requests:
-      cpu: 100m
-      memory: 256Mi
-
-jaeger:
-  enabled: false
-  replicaCount: 1
-  service:
-    type: ClusterIP
-  image:
-    repository: jaegertracing/all-in-one
-    tag: 1.68.0
-  resources:
-    limits:
-      cpu: 500m
-      memory: 512Mi
     requests:
       cpu: 100m
       memory: 256Mi
