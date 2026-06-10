@@ -1,5 +1,7 @@
 model_list:
-  - model_name: openai-gpt-4o
+  # ENG-87801: onsite is bring-your-own-model. Labels are model-neutral; the actual
+  # model is supplied via OPENAI_MODEL / AZURE_MODEL env vars (see .env.example).
+  - model_name: openai-model
     litellm_params:
       model: os.environ/OPENAI_MODEL
       api_key: os.environ/OPENAI_API_KEY
@@ -7,7 +9,7 @@ model_list:
     litellm_params:
       model: os.environ/OPENAI_EMBEDDING_MODEL
       api_key: os.environ/OPENAI_API_KEY_TEXT_EMBEDDING
-  - model_name: azure-gpt-4o-latest
+  - model_name: azure-model
     litellm_params:
       model: os.environ/AZURE_MODEL
       api_base: os.environ/AZURE_API_BASE
@@ -20,4 +22,4 @@ model_list:
       api_key: os.environ/AZURE_API_TEXT_EMBEDDING
       api_version: "2024-10-21"
 general_settings:
-  master_key: sk-default
+  master_key: os.environ/PROXY_MASTER_KEY
